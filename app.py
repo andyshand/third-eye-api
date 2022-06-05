@@ -109,7 +109,6 @@ from einops import rearrange, repeat
 from guided_diffusion.script_util import (create_gaussian_diffusion,
                                           create_model_and_diffusion,
                                           model_and_diffusion_defaults)
-from ipywidgets import Output
 from ldm.modules.diffusionmodules.util import (make_ddim_sampling_parameters,
                                                make_ddim_timesteps, noise_like)
 # from ldm.models.diffusion.ddim import DDIMSampler
