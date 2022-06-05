@@ -7,7 +7,7 @@ def cmd(cmd):
 def clone_github_repo(repo_url: str):
     repo_name = repo_url.split("/")[-1].replace('.git', '')    
     if not path_exists(repo_name):
-        cmd(f'git clone --depth 1 https://github.com/{repo_url}')
+        cmd(f'degit "https://github.com/{repo_url}"')
     else:
         print(f"{repo_name} already exists")
         
