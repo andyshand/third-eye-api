@@ -12,7 +12,7 @@ def clone_repo(repo_url):
         
 def install(package):
     is_it_installed = cmd(f"pip3 show {package}")
-    if is_it_installed:
+    if is_it_installed is 0:
         print(f"{package} is already installed")
     else:
         cmd(f"pip3 install {package}") 
