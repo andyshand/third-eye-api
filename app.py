@@ -71,16 +71,12 @@ import sys
 sys.stdout.write("Imports ...\n")
 sys.stdout.flush()
 
-sys.path.append("./ResizeRight")
-sys.path.append("./MiDaS")
-sys.path.append("./CLIP")
-sys.path.append("./guided-diffusion")
-sys.path.append("./latent-diffusion")
-sys.path.append(".")
-sys.path.append("./taming-transformers")
-sys.path.append("./disco-diffusion")
-sys.path.append("./AdaBins")
-sys.path.append('./pytorch3d-lite')
+from add_to_path import add_to_path
+
+for path in '. ResizeRight MiDaS CLIP guided-diffusion latent-diffusion taming-transformers disco-diffusion AbaBins pytorch3d-lite'.split():
+    add_to_path(path)
+
+# 
 # sys.path.append('./pytorch3d')
 
 import gc
