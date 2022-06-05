@@ -2357,6 +2357,10 @@ from subprocess import Popen
 generations = {}
 app = Flask(__name__)
 
+@app.route('/ping')
+def ping():
+    return 'pong'
+
 @app.route('/generation')
 def generate_image(image, methods=['POST']):
     body = request.json
