@@ -3,8 +3,8 @@ from os.path import exists as path_exists
 
 def cmd(cmd):
     return os.system(cmd)
-def clone_repo(repo_url):
-    repo_name = repo_url.split("/")[-1]
+def clone_repo(repo_url: str):
+    repo_name = repo_url.split("/")[-1].replace('.git', '')    
     if not path_exists(repo_name):
         cmd(f'git clone --depth 1 {repo_url}')
     else:
