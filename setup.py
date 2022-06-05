@@ -24,6 +24,7 @@ install("imageio")
 install("kornia")
 install("pathvalidate")
 install("dalle_pytorch")
+install("flask")
 
 pyt_version_str = torch.__version__.split("+")[0].replace(".", "")
 version_str = "".join([
