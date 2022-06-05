@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Check we're in the home directory
-if [ ! -d "./home" ]; then
+# Check we're in the user's home directory
+if [ ! -d "$HOME" ]; then
   read -p "Are you sure you want to run this outside of the home directory? [y/N] " -n 1 -r
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1
