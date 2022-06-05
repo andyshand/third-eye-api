@@ -42,7 +42,7 @@ sys.path.append('./pytorch3d-lite')
 
 pathlib.Path(DefaultPaths.model_path).mkdir(parents=True, exist_ok=True)
 
-def download_model(url, file_name):
+def download_model(url, file_name = None):
     out_dir = DefaultPaths.model_path
     if file_name is None:
         file_name = url.split("/")[-1]
