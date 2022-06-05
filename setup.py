@@ -37,7 +37,7 @@ def download_model(url, file_name = None):
     out_dir = DefaultPaths.model_path
     if file_name is None:
         file_name = url.split("/")[-1]
-    cmd(f'curl -L -o {out_dir}/{file_name} {url}')
+    cmd(f'curl -L --progress-bar -o {out_dir}/{file_name} {url}')
 
 download_model("https://the-eye.eu/public/AI/models/512x512_diffusion_unconditional_ImageNet/512x512_diffusion_uncond_finetune_008100.pt")
 download_model("https://the-eye.eu/public/AI/models/v-diffusion/secondary_model_imagenet_2.pth")
