@@ -16,7 +16,6 @@ install("opencv-python", "cv2")
 for mod in 'fvcore iopath lpips datetime timm ftfy'.split():
     install(mod)
 install("pytorch-lightning")
-install("infer")
 install("omegaconf")
 install("einops")
 install("imageio")
