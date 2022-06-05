@@ -66,12 +66,12 @@ google_drive = False
 save_models_to_google_drive = False
 
 import sys
+import torch
 
 from DefaultPaths import DefaultPaths
 
 sys.stdout.write("Imports ...\n")
 sys.stdout.flush()
-
 torch.cuda.empty_cache()
 
 sys.path.append("./ResizeRight")
