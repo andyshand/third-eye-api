@@ -2379,8 +2379,11 @@ def generate_image(image, methods=['POST']):
 
 @app.route('/generation/<int:generation_id>')
 def get_generation(generation_id):
-    generation = generations[generation_id]
-    return jsonify(generation)
+    if generation_id in generations:
+        return jsonify(generations[generation_id])
+    
+    # Return 404, generation not found
+    return '', 404
 
 port=8888
 
