@@ -62,24 +62,10 @@ Setting | Description | Default
 # 1. Set Up
 """
 
-is_colab = False
-google_drive = False
-save_models_to_google_drive = False
-
 import sys
 
-sys.stdout.write("Imports ...\n")
-sys.stdout.flush()
-
-from add_to_path import add_to_path
-
-for path in '. ResizeRight MiDaS CLIP guided-diffusion latent-diffusion taming-transformers disco-diffusion AbaBins pytorch3d-lite'.split():
-    add_to_path(path)
-    
-print(sys.path)
-
-# 
-# sys.path.append('./pytorch3d')
+from before_run import before_run
+before_run()
 
 import gc
 import hashlib
@@ -583,14 +569,9 @@ def run_model(generation: Generation):
                         cutouts.append(cutout)
 
                 if cutout_debug:
-                    if is_colab:
-                        TF.to_pil_image(cutouts[0].clamp(0, 1).squeeze(0)).save(
-                            "/content/cutout_overview0.jpg", quality=99
-                        )
-                    else:
-                        TF.to_pil_image(cutouts[0].clamp(0, 1).squeeze(0)).save(
-                            "cutout_overview0.jpg", quality=99
-                        )
+                    TF.to_pil_image(cutouts[0].clamp(0, 1).squeeze(0)).save(
+                        "cutout_overview0.jpg", quality=99
+                    )
 
             if self.InnerCrop > 0:
                 for i in range(self.InnerCrop):
@@ -608,14 +589,9 @@ def run_model(generation: Generation):
                     cutout = resize(cutout, out_shape=output_shape)
                     cutouts.append(cutout)
                 if cutout_debug:
-                    if is_colab:
-                        TF.to_pil_image(cutouts[-1].clamp(0, 1).squeeze(0)).save(
-                            "/content/cutout_InnerCrop.jpg", quality=99
-                        )
-                    else:
-                        TF.to_pil_image(cutouts[-1].clamp(0, 1).squeeze(0)).save(
-                            "cutout_InnerCrop.jpg", quality=99
-                        )
+                    TF.to_pil_image(cutouts[-1].clamp(0, 1).squeeze(0)).save(
+                        "cutout_InnerCrop.jpg", quality=99
+                    )
             cutouts = torch.cat(cutouts)
             if skip_augs is not True:
                 cutouts = self.augs(cutouts)
