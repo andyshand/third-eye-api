@@ -14,6 +14,7 @@ install("torch")
 import torch
 
 install("opencv-python", "cv2")
+install("pandas")
 for mod in 'fvcore iopath lpips datetime timm ftfy'.split():
     install(mod)
 install("pytorch-lightning")
