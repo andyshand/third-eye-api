@@ -62,6 +62,7 @@ Setting | Description | Default
 # 1. Set Up
 """
 
+import cmd
 import sys
 
 sys.stdout.write("Imports ...\n")
@@ -2380,4 +2381,6 @@ def get_generation(generation_id):
     generation = generations[generation_id]
     return jsonify(generation)
 
-app.run(port=8888)
+port=8888
+app.run(port=port)
+cmd(f'lt --port {port}')

@@ -24,7 +24,7 @@ if ! [ -x "$(command -v node)" ]; then
   nvm install 16
 fi
 
-npm i -g degit
+npm i -g degit localtunnel
 
 # The only git repo where we're interested in the git history
 git clone --depth 1 "https://github.com/andyshand/third-eye-api.git"
