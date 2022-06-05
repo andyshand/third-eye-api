@@ -1,10 +1,8 @@
 
 import os
-
+from setup_util import cmd, install, clone_repo
 from DefaultPaths import DefaultPaths
 
-def cmd(cmd):
-    os.system(cmd)
 cmd("apt-get install -y curl")
 cmd("pip install torch")
 
@@ -12,25 +10,18 @@ import pathlib
 import shutil
 import sys
 from os.path import exists as path_exists
-
 import torch
 
-def clone_repo(repo_url):
-    repo_name = repo_url.split("/")[-1]
-    if not path_exists(repo_name):
-        cmd(f'git clone --depth 1 {repo_url}')
-    else:
-        print(f"{repo_name} already exists")
-        
-cmd("pip install opencv-python")
+install("opencv-python")
 cmd("pip install fvcore iopath lpips datetime timm ftfy")
-cmd("pip install pytorch-lightning")
-cmd("pip install omegaconf")
-cmd("pip install einops")
-cmd("pip install imageio")
-cmd("pip install kornia")
-cmd("pip install pathvalidate")
-cmd("pip install dalle_pytorch")
+install("pytorch-lightning")
+install("omegaconf")
+install("einops")
+install("imageio")
+install("kornia")
+install("pathvalidate")
+install("dalle_pytorch")
+
 pyt_version_str = torch.__version__.split("+")[0].replace(".", "")
 version_str = "".join([
     f"py3{sys.version_info.minor}_cu",
