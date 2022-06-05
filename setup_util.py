@@ -11,8 +11,10 @@ def clone_repo(repo_url):
         print(f"{repo_name} already exists")
         
 def install(package):
-    is_it_installed = cmd(f"pip3 show {package}")
-    if is_it_installed == 0:
+    venv_path = os.environ.get('VIRTUAL_ENV')
+    python_version = os.environ.get('PYTHON_VERSION')
+    is_it_installed = path_exists(f'{venv_path}/lib/python{python_version}/site-packages/{package}')
+    if is_it_installed:
         print(f"{package} is already installed")
     else:
         cmd(f"pip3 install {package}") 
