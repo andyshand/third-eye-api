@@ -1,4 +1,5 @@
 import os
+import sys
 from os.path import exists as path_exists
 
 def cmd(cmd):
@@ -12,8 +13,13 @@ def clone_repo(repo_url: str):
         
 def install(package):
     venv_path = os.environ.get('VIRTUAL_ENV')
-    python_version = os.environ.get('PYTHON_VERSION')
-    is_it_installed = path_exists(f'{venv_path}/lib/python{python_version}/site-packages/{package}')
+    major_version = sys.version_info[0]
+    minor_version = sys.version_info[1]
+    python_version = f"{major_version}.{minor_version}"      
+    
+    path = f"{venv_path}/lib/python{python_version}/site-packages/{package}"
+    print(path)
+    is_it_installed = path_exists(path)
     if is_it_installed:
         print(f"{package} is already installed")
     else:
