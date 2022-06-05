@@ -2387,6 +2387,7 @@ def get_generation(generation_id):
 
 port=8888
 
+p = None
 if os.environ.get('LT') != "false": 
     p = Popen(["lt", "--port", str(port)])
 
