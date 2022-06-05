@@ -75,6 +75,8 @@ from add_to_path import add_to_path
 
 for path in '. ResizeRight MiDaS CLIP guided-diffusion latent-diffusion taming-transformers disco-diffusion AbaBins pytorch3d-lite'.split():
     add_to_path(path)
+    
+print(sys.path)
 
 # 
 # sys.path.append('./pytorch3d')
