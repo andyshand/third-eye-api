@@ -2375,7 +2375,7 @@ def generate_image(image, methods=['POST']):
     )        
     return jsonify(generation)
 
-@app.routes('/generation/<int:generation_id>')
+@app.route('/generation/<int:generation_id>')
 def get_generation(generation_id):
     generation = generations[generation_id]
     return jsonify(generation)
