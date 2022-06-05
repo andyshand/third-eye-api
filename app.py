@@ -2351,6 +2351,7 @@ def run_model(generation: Generation):
 import os
 
 from flask import Flask, jsonify, request
+from subprocess import Popen
 
 
 generations = {}
@@ -2382,5 +2383,7 @@ def get_generation(generation_id):
     return jsonify(generation)
 
 port=8888
+
+p = Popen(["lt", "--port", str(port)])
 app.run(port=port)
-cmd(f'lt --port {port}')
+p.terminate()
