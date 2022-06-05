@@ -4,7 +4,7 @@ import os
 
 def cmd(cmd):
     os.system(cmd)
-cmd("apt-get install curl")
+cmd("apt-get install -y curl")
 cmd("pip install wget torch")
 
 import pathlib
@@ -14,6 +14,13 @@ from os.path import exists as path_exists
 
 import torch
 import wget
+
+def clone_repo(repo_url):
+    repo_name = repo_url.split("/")[-1]
+    if not path_exists(repo_name):
+        cmd(f'git clone --depth 1 {repo_url}')
+    else:
+        print(f"{repo_name} already exists")
 
 cmd("pip install fvcore iopath lpips datetime timm ftfy")
 cmd("pip install pytorch-lightning")
@@ -29,7 +36,7 @@ version_str = "".join([
     torch.version.cuda.replace(".", ""),
     f"_pyt{pyt_version_str}"
 ])
-cmd("git clone https://github.com/MSFTserver/pytorch3d-lite.git")
+clone_repo("https://github.com/MSFTserver/pytorch3d-lite.git")
 sys.path.append('./pytorch3d-lite')
 
 root_path = f'.'
@@ -63,17 +70,17 @@ if not (path_exists(f'{model_path}/kl-f8.pt')):
     cmd(
         f'wget -c https://dall-3.com/models/glid-3-xl/kl-f8.pt -O "{model_path}/kl-f8.pt"')
 
-cmd(f'git clone "https://github.com/CompVis/taming-transformers.git"')
-cmd(f'git clone "https://github.com/openai/CLIP.git"')
-cmd(f'git clone "https://github.com/crowsonkb/guided-diffusion.git"')
-cmd(f'git clone "https://github.com/assafshocher/ResizeRight.git"')
-cmd(f'git clone "https://github.com/isl-org/MiDaS.git"')
+clone_repo("https://github.com/CompVis/taming-transformers.git")
+clone_repo("https://github.com/openai/CLIP.git")
+clone_repo("https://github.com/crowsonkb/guided-diffusion.git")
+clone_repo("https://github.com/assafshocher/ResizeRight.git")
+clone_repo("https://github.com/isl-org/MiDaS.git")
 if not path_exists(f'{root_path}/MiDaS/midas_utils.py'):
     os.rename("MiDaS/utils.py", "MiDaS/midas_utils.py")
-cmd(f'git clone "https://github.com/CompVis/latent-diffusion.git"')
-cmd(f'git clone "https://github.com/shariqfarooq123/AdaBins.git"')
-cmd(f'git clone "https://github.com/alembics/disco-diffusion.git"')
-cmd(f'git clone "https://github.com/Jack000/glid-3-xl"')
+clone_repo("https://github.com/CompVis/latent-diffusion.git")
+clone_repo("https://github.com/shariqfarooq123/AdaBins.git")
+clone_repo("https://github.com/alembics/disco-diffusion.git")
+clone_repo("https://github.com/Jack000/glid-3-xl")
 if not path_exists(f'{root_path}/glid-3-xl/jack_guided_diffusion'):
     os.rename('glid-3-xl/guided_diffusion', 'glid-3-xl/jack_guided_diffusion')
 
