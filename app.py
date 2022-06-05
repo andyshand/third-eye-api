@@ -93,7 +93,6 @@ from types import SimpleNamespace
 import clip
 import cv2
 import disco_xform_utils as dxf
-import ipywidgets as widgets
 import lpips
 import matplotlib.pyplot as plt
 import numpy as np
