@@ -2383,7 +2383,7 @@ def get_generation(generation_id):
         return jsonify(generations[generation_id])
     
     # Return 404, generation not found
-    return '', 404
+    return jsonify({'error': 'generation not found'}), 404
 
 port=8888
 
