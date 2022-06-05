@@ -29,7 +29,7 @@ version_str = "".join([
     torch.version.cuda.replace(".", ""),
     f"_pyt{pyt_version_str}"
 ])
-clone_github_repo("https://github.com/MSFTserver/pytorch3d-lite.git")
+clone_github_repo("MSFTserver/pytorch3d-lite.git")
 sys.path.append('./pytorch3d-lite')
 
 pathlib.Path(DefaultPaths.model_path).mkdir(parents=True, exist_ok=True)
