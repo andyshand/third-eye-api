@@ -1,16 +1,19 @@
 
+import os
+
+
 def cmd(cmd):
     os.system(cmd)
 cmd("apt-get install curl")
 cmd("pip install wget torch")
 
-import torch
-import sys
-from os.path import exists as path_exists
-import wget
 import pathlib
 import shutil
-import os
+import sys
+from os.path import exists as path_exists
+
+import torch
+import wget
 
 cmd("pip install fvcore iopath lpips datetime timm ftfy")
 cmd("pip install pytorch-lightning")
