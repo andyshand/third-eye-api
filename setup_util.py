@@ -15,10 +15,8 @@ def install(package):
     venv_path = os.environ.get('VIRTUAL_ENV')
     major_version = sys.version_info[0]
     minor_version = sys.version_info[1]
-    python_version = f"{major_version}.{minor_version}"      
-    
+    python_version = f"{major_version}.{minor_version}"          
     path = f"{venv_path}/lib/python{python_version}/site-packages/{package}"
-    print(path)
     is_it_installed = path_exists(path)
     if is_it_installed:
         print(f"{package} is already installed")
