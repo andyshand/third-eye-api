@@ -11,12 +11,13 @@ def clone_github_repo(repo_url: str):
     else:
         print(f"{repo_name} already exists")
         
-def install(package):
+def install(package, check_name = None):
     venv_path = os.environ.get('VIRTUAL_ENV')
     major_version = sys.version_info[0]
     minor_version = sys.version_info[1]
     python_version = f"{major_version}.{minor_version}"          
-    path = f"{venv_path}/lib/python{python_version}/site-packages/{package}"
+    check_name = check_name if check_name else package
+    path = f"{venv_path}/lib/python{python_version}/site-packages/{check_name}"
     is_it_installed = path_exists(path)
     if is_it_installed:
         print(f"{package} is already installed")
