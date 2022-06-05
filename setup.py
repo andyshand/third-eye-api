@@ -21,7 +21,8 @@ def clone_repo(repo_url):
         cmd(f'git clone --depth 1 {repo_url}')
     else:
         print(f"{repo_name} already exists")
-
+        
+cmd("pip install opencv-python")
 cmd("pip install fvcore iopath lpips datetime timm ftfy")
 cmd("pip install pytorch-lightning")
 cmd("pip install omegaconf")

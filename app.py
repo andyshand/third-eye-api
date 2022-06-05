@@ -67,8 +67,12 @@ save_models_to_google_drive = False
 
 import sys
 
+from DefaultPaths import DefaultPaths
+
 sys.stdout.write("Imports ...\n")
 sys.stdout.flush()
+
+torch.cuda.empty_cache()
 
 sys.path.append("./ResizeRight")
 sys.path.append("./MiDaS")
@@ -143,7 +147,7 @@ sys.stdout.write("Parsing arguments ...\n")
 sys.stdout.flush()
 
 torch.cuda.empty_cache()
-def run_model(generation: Generation, stoutput, DefaultPaths):
+def run_model(generation: Generation, stoutput):
     args2 = generation.args
     global model, diffusion
     if args2.seed is not None:
@@ -2401,7 +2405,7 @@ def generate_image(image, methods=['POST']):
 
 @app.routes('/generation/<int:generation_id>')
 def get_generation(generation_id):
-    generation = st.session_state.generations[generation_id]
+    generation = generations[generation_id]
     return jsonify(generation)
 
 app.run(port=8888)
