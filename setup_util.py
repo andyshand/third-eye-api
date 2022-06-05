@@ -1,7 +1,8 @@
 import os
+from os.path import exists as path_exists
 
 def cmd(cmd):
-    os.system(cmd)
+    return os.system(cmd)
 def clone_repo(repo_url):
     repo_name = repo_url.split("/")[-1]
     if not path_exists(repo_name):
