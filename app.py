@@ -64,6 +64,9 @@ Setting | Description | Default
 
 import sys
 
+sys.stdout.write("Imports ...\n")
+sys.stdout.flush()
+
 from before_run import before_run
 before_run()
 

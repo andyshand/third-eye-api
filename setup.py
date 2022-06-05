@@ -7,6 +7,7 @@ import sys
 from os.path import exists as path_exists
 
 from DefaultPaths import DefaultPaths
+from add_to_path import add_to_path
 from setup_util import clone_github_repo, cmd, install
 
 install("torch")
@@ -30,7 +31,7 @@ version_str = "".join([
     f"_pyt{pyt_version_str}"
 ])
 clone_github_repo("MSFTserver/pytorch3d-lite.git")
-sys.path.append('./pytorch3d-lite')
+add_to_path('./pytorch3d-lite')
 
 pathlib.Path(DefaultPaths.model_path).mkdir(parents=True, exist_ok=True)
 

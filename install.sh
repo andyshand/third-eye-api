@@ -14,12 +14,16 @@ rm -rf third-eye-api
 # Dependencies for everything
 sudo apt-get install git ffmpeg libsm6 libxext6 curl -y
 
-# Install nvm, so we can install `degit` to quickly clone git repos
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
-nvm install 16
+# Check if node is installed
+if ! [ -x "$(command -v node)" ]; then
+  # Install node via nvm, so we can install `degit` to quickly clone git repos
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"                   # This loads nvm
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" # This loads nvm bash_completion
+  nvm install 16
+fi
+
 npm i -g degit
 
 # The only git repo where we're interested in the git history
