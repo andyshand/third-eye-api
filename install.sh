@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sudo apt-get install git ffmpeg libsm6 libxext6 -y
+sudo apt-get install git ffmpeg libsm6 libxext6 curl -y
 rm -rf third-eye-api
 git clone --depth 1 "https://github.com/andyshand/third-eye-api.git"
 

@@ -1,15 +1,14 @@
 
 import os
-from setup_util import cmd, install, clone_repo
-from DefaultPaths import DefaultPaths
-
-cmd("apt-get install -y curl")
-cmd("pip install torch")
-
 import pathlib
 import shutil
 import sys
 from os.path import exists as path_exists
+
+from DefaultPaths import DefaultPaths
+from setup_util import clone_repo, cmd, install
+
+install("torch")
 import torch
 
 install("opencv-python")
