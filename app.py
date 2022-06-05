@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Disco Diffusion v5 [w/ 3D animation] (modified by @softology to work on Visions of Chaos, then further modified by @multimodalart to run on Multimodal, THEN modified by @andyshand to run on vast.ai with an HTTP API)
 # Adapted from the Visions of Chaos software (https://softology.pro/voc.htm), that adapted it from the
 # Original file is located at https://colab.research.google.com/github/alembics/disco-diffusion/blob/main/Disco_Diffusion.ipynb
