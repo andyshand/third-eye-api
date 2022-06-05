@@ -79,7 +79,8 @@ import os
 import random
 import sys
 import time
-# sys.path.append('./SLIP')
+
+from Generation import Generation
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -2350,7 +2351,6 @@ import os
 
 from flask import Flask, jsonify, request
 
-from Generation import Generation
 
 generations = {}
 app = Flask(__name__)
