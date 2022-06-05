@@ -2393,7 +2393,7 @@ port=8888
 
 p = None
 if os.environ.get('LT') != "false": 
-    p = Popen(["lt", "--port", str(port)])
+    p = Popen(["./ngrok", "http", str(port)])
 
 app.run(port=port)
 
