@@ -2368,6 +2368,7 @@ def generate_image():
     print('got 2')
     prompt = request.form['prompt']
     print('got 3')
+    print(request.files)
     image_file = request.files['image']
     
     print('parsed data?')
