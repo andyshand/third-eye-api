@@ -2360,7 +2360,7 @@ def run_model(generation):
 # HTTP API
 import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from subprocess import Popen
 import json
 from munch import DefaultMunch
@@ -2397,10 +2397,13 @@ def generate_image():
     generation.image_file = image_path
     generations[generation.id] = generation
 
-    run_model(generation)        
-    return jsonify(generation)
+    run_model(generation)     
+    return jsonify({})
 
-@app.route('/generations/<int>')
+@app.route('/generations/preview/<int:generation_id>')
+def get_generation_preview_image(generation_id):
+    generation = generations[generation_id]
+    return send_file(generation.progress_image, mimetype='image/png')
 
 @app.route('/generations/<int:generation_id>')
 def get_generation(generation_id):
