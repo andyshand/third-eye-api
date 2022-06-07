@@ -2400,6 +2400,7 @@ def get_generation_preview_image(id):
 
 @app.route('/generations/<id>')
 def get_generation(id):
+    print(generations)
     if id in generations:
         return jsonify(DefaultMunch.toDict(generations[id]))
     
