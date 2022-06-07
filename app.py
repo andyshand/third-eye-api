@@ -2391,7 +2391,7 @@ def generate_image():
     generations[generation.id] = generation
 
     run_model(generation)     
-    return jsonify(DefaultMunch.toDict(generation))
+    return jsonify(generation.__dict__)
 
 @app.route('/generations/preview/<id>')
 def get_generation_preview_image(id):
@@ -2400,9 +2400,8 @@ def get_generation_preview_image(id):
 
 @app.route('/generations/<id>')
 def get_generation(id):
-    print(generations)
     if id in generations:
-        return jsonify(DefaultMunch.toDict(generations[id]))
+        return jsonify(generations[id].__dict__)
     
     # Return 404, generation not found
     return jsonify({'error': 'generation not found'}), 404
