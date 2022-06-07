@@ -2367,7 +2367,7 @@ def generate_image():
     modelSettings = json.loads(request.form['modelSettings'])
     print('got 2')
     prompt = request.form['prompt']
-    print('got 3')
+    print(modelSettings)
     print(request.files)
     image_file = request.files['image_file']
     
