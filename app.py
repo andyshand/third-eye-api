@@ -1142,7 +1142,7 @@ def run_model(generation):
                         elif j in args.intermediate_saves:
                             intermediateStep = True
                             
-                        if itt % args2.update == 0 or cur_t == -1 or itt == 1:
+                        if itt % display_rate == 0 or cur_t == -1 or itt == 1:
                             for k, image in enumerate(sample["pred_xstart"]):
                                 sys.stdout.flush()
                                 sys.stdout.write("Saving progress ...\n")
@@ -2169,7 +2169,7 @@ def run_model(generation):
 
     # @title Do the Run!
     # @markdown `n_batches` ignored with animation modes.
-    display_rate = args2.update  # @param{type: 'number'}
+    display_rate = 10  # @param{type: 'number'}
     n_batches = 1  # @param{type: 'number'}
 
     batch_size = 1
