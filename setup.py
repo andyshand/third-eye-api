@@ -13,6 +13,7 @@ from setup_util import clone_github_repo, cmd, install
 install("torch")
 import torch
 
+install('matplotlib')
 install("opencv-python", "cv2")
 install("pandas")
 for mod in 'fvcore iopath lpips datetime timm ftfy'.split():
