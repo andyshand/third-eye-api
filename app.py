@@ -1155,7 +1155,7 @@ def run_model(generation):
                                 if args.animation_mode != "None":
                                     generation.save_progress_image(image, "prevFrame.png")
 
-                                generation.save_progress_image(image, args2.image_file)
+                                generation.save_progress_image(image, save_filename)
                                 if (args2.frame_dir is not None) and (
                                     args.animation_mode == "None"
                                 ):
