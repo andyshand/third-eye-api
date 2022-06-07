@@ -2361,7 +2361,7 @@ app = Flask(__name__)
 def ping():
     return 'pong'
 
-@app.route('/generation')
+@app.route('/generations')
 def generate_image(image, methods=['POST']):
     body = request.json
     image_file = request.files('imagefile', '')
@@ -2381,7 +2381,7 @@ def generate_image(image, methods=['POST']):
     )        
     return jsonify(generation)
 
-@app.route('/generation/<int:generation_id>')
+@app.route('/generations/<int:generation_id>')
 def get_generation(generation_id):
     if generation_id in generations:
         return jsonify(generations[generation_id])
