@@ -13,6 +13,7 @@ from setup_util import clone_github_repo, cmd, install
 install("torch")
 import torch
 
+install('munch')
 install('matplotlib')
 install("opencv-python", "cv2")
 install("pandas")

@@ -2357,6 +2357,7 @@ import os
 from flask import Flask, jsonify, request
 from subprocess import Popen
 import json
+from munch import DefaultMunch
 
 generations = {}
 app = Flask(__name__)
@@ -2368,7 +2369,7 @@ def ping():
 @app.route('/generations', methods=['POST'])
 def generate_image():
     print('got 1')
-    modelSettings = json.loads(request.form['modelSettings'])
+    modelSettings = DefaultMunch.fromDict(json.loads(request.form['modelSettings']))
     print('got 2')
     prompt = request.form['prompt']
     print(modelSettings)
