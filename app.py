@@ -131,7 +131,9 @@ sys.stdout.write("Parsing arguments ...\n")
 sys.stdout.flush()
 
 torch.cuda.empty_cache()
-def run_model(generation: Generation):
+def run_model(generation):
+    print(generation)
+    print(generation.args)
     args2 = generation.args
     print('here is the seed')
     print(args2.seed)
