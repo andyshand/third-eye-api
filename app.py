@@ -2393,12 +2393,12 @@ def generate_image():
     run_model(generation)     
     return jsonify(DefaultMunch.toDict(generation))
 
-@app.route('/generations/preview/<string:generation_id>')
+@app.route('/generations/preview/<id>')
 def get_generation_preview_image(id):
     generation = generations[id]
     return send_file(generation.progress_image, mimetype='image/png')
 
-@app.route('/generations/<string:generation_id>')
+@app.route('/generations/<id>')
 def get_generation(id):
     if id in generations:
         return jsonify(DefaultMunch.toDict(generations[id]))
