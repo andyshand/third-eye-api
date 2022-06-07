@@ -2386,7 +2386,7 @@ def generate_image():
     image_path = os.path.join(uploaded_folder, image_file.filename)
     image_file.save(image_path)
 
-    generation = Generation(prompt, id, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
+    generation = Generation(id, prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
     generation.image_file = image_path
     generations[generation.id] = generation
 
