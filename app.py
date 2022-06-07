@@ -64,6 +64,7 @@ Setting | Description | Default
 
 import cmd
 import sys
+from DefaultPaths import DefaultPaths
 
 sys.stdout.write("Imports ...\n")
 sys.stdout.flush()
