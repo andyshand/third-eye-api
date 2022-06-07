@@ -2363,16 +2363,23 @@ def ping():
 
 @app.route('/generations')
 def generate_image(image, methods=['POST']):
+    print('got 1')
     modelSettings = json.loads(request.form['modelSettings'])
+    print('got 2')
     prompt = request.form['prompt']
+    print('got 3')
     image_file = request.files['image']
+    
+    print('parsed data?')
 
     uploaded_folder = f"./uploaded"
     if not path_exists(uploaded_folder):
         os.makedirs(uploaded_folder)
 
+    print('makedirs')
     image_path = os.path.join(uploaded_folder, image_file.filename)
     image_file.save(image_path)
+    print('saveimg')
 
     generation = Generation(prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
     generation.image_file = image_path
