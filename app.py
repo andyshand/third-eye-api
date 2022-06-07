@@ -2174,7 +2174,7 @@ def run_model(generation):
 
     # @title Do the Run!
     # @markdown `n_batches` ignored with animation modes.
-    display_rate = 10  # @param{type: 'number'}
+    display_rate = 5  # @param{type: 'number'}
     n_batches = 1  # @param{type: 'number'}
 
     batch_size = 1
@@ -2374,41 +2374,34 @@ def ping():
 
 @app.route('/generations', methods=['POST'])
 def generate_image():
-    print('got 1')
     modelSettings = DefaultMunch.fromDict(json.loads(request.form['modelSettings']))
-    print('got 2')
     prompt = request.form['prompt']
-    print(modelSettings)
-    print(request.files)
+    id = request.form['id']
     image_file = request.files['image_file']
     
-    print('parsed data?')
-
     uploaded_folder = f"./uploaded"
     if not path_exists(uploaded_folder):
         os.makedirs(uploaded_folder)
 
-    print('makedirs')
     image_path = os.path.join(uploaded_folder, image_file.filename)
     image_file.save(image_path)
-    print('saveimg')
 
-    generation = Generation(prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
+    generation = Generation(prompt, id, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
     generation.image_file = image_path
     generations[generation.id] = generation
 
     run_model(generation)     
     return jsonify(DefaultMunch.toDict(generation))
 
-@app.route('/generations/preview/<int:generation_id>')
-def get_generation_preview_image(generation_id):
-    generation = generations[generation_id]
+@app.route('/generations/preview/<string:generation_id>')
+def get_generation_preview_image(id):
+    generation = generations[id]
     return send_file(generation.progress_image, mimetype='image/png')
 
-@app.route('/generations/<int:generation_id>')
-def get_generation(generation_id):
-    if generation_id in generations:
-        return jsonify(DefaultMunch.toDict(generations[generation_id]))
+@app.route('/generations/<string:generation_id>')
+def get_generation(id):
+    if id in generations:
+        return jsonify(DefaultMunch.toDict(generations[id]))
     
     # Return 404, generation not found
     return jsonify({'error': 'generation not found'}), 404

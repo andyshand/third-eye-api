@@ -4,12 +4,12 @@ next_generation_id = 0
 
 
 class Generation(object):
-    def __init__(self, prompt, model, sub_model, args):
+    def __init__(self, id, prompt, model, sub_model, args):
         self.model = model
         self.prompt = prompt
         self.args = args
         self.submodel = sub_model
-        self.id = ++next_generation_id
+        self.id = id
 
     def set_status(self, status):
         self.status = status;
@@ -26,3 +26,5 @@ class Generation(object):
     def save_progress_image(self, image, path):
         image.save(path)
         self.progress_image = path
+
+    
