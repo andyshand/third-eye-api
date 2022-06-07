@@ -2392,11 +2392,9 @@ def get_generation(generation_id):
 port=8888
 
 p = None
-if os.environ.get('LT') != "false": 
-    p = Popen(["./ngrok", "http", str(port)])
+print(f"Run the following command in another terminal window to access the web server from the internet:")
+print(f"ngrok http {port}")
 
 app.run(port=port)
 
-if p is not None:
-    p.terminate()
 
