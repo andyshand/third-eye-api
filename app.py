@@ -2361,8 +2361,8 @@ app = Flask(__name__)
 def ping():
     return 'pong'
 
-@app.route('/generations')
-def generate_image(image, methods=['POST']):
+@app.route('/generations', methods=['POST'])
+def generate_image():
     print('got 1')
     modelSettings = json.loads(request.form['modelSettings'])
     print('got 2')
