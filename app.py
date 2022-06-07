@@ -133,6 +133,7 @@ sys.stdout.flush()
 
 torch.cuda.empty_cache()
 def run_model(generation):
+    preview_image_path = f"{DefaultPaths.output_path}/preview_output.png"
     print(generation)
     print(generation.args)
     args2 = generation.args
@@ -1155,7 +1156,7 @@ def run_model(generation):
                                 if args.animation_mode != "None":
                                     generation.save_progress_image(image, "prevFrame.png")
 
-                                generation.save_progress_image(image, f"{DefaultPaths.output_path}/preview_output.png")
+                                generation.save_progress_image(image, preview_image_path)
                                 if (args2.frame_dir is not None) and (
                                     args.animation_mode == "None"
                                 ):
@@ -1271,7 +1272,7 @@ def run_model(generation):
                     else:
                         save_filename = f"{DefaultPaths.output_path}/{sanitize_filename(args2.prompt)} [Disco Diffusion v5] {args2.seed}_batch 00001.png"
                 shutil.copyfile(
-                    args2.image_file,
+                    preview_image_path,
                     save_filename,
                 )
                 generation.done(save_filename)
@@ -2398,6 +2399,8 @@ def generate_image():
 
     run_model(generation)        
     return jsonify(generation)
+
+@app.route('/generations/<int>')
 
 @app.route('/generations/<int:generation_id>')
 def get_generation(generation_id):
