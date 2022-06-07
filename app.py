@@ -133,6 +133,7 @@ sys.stdout.flush()
 torch.cuda.empty_cache()
 def run_model(generation: Generation):
     args2 = generation.args
+    print(args2)
     global model, diffusion
     if args2.seed is not None:
         sys.stdout.write(f"Setting seed to {args2.seed} ...\n")
