@@ -1235,10 +1235,14 @@ def run_model(generation):
                 #    torch.cuda.empty_cache()
                 #    generation.set_status("Done!")
                 #    pass
-                with image_display:
-                    if args.sharpen_preset != "Off" and animation_mode == "None":
-                        print("Starting Diffusion Sharpening...")
-                        do_superres(imgToSharpen, f"{batchFolder}/{filename}")
+
+                
+                # Andy commented out the below, not sure if necessary but we
+                # don't have a reference to image_display
+                # with image_display:
+                #     if args.sharpen_preset != "Off" and animation_mode == "None":
+                #         print("Starting Diffusion Sharpening...")
+                #         do_superres(imgToSharpen, f"{batchFolder}/{filename}")
 
                 import os
                 import shutil
