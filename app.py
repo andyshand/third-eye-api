@@ -141,7 +141,7 @@ def run_model(generation):
     if args2.seed is not None:
         sys.stdout.write(f"Setting seed to {args2.seed} ...\n")
         sys.stdout.flush()
-        generation.setStatus(f"Setting seed to {args2.seed} ...\n")
+        generation.set_status(f"Setting seed to {args2.seed} ...\n")
         import numpy as np
 
         np.random.seed(args2.seed)
@@ -1117,7 +1117,7 @@ def run_model(generation):
                 # display.clear_output(wait=True)
                 itt = 1
                 imgToSharpen = None
-                generation.setStatus("Starting the execution...")
+                generation.set_status("Starting the execution...")
                 gc.collect()
                 torch.cuda.empty_cache()
                 # from tqdm.auto import tqdm
@@ -1232,7 +1232,7 @@ def run_model(generation):
                 #    imageLocation.image(args2.image_file)
                 #    gc.collect()
                 #    torch.cuda.empty_cache()
-                #    generation.setStatus("Done!")
+                #    generation.set_status("Done!")
                 #    pass
                 with image_display:
                     if args.sharpen_preset != "Off" and animation_mode == "None":
@@ -1270,7 +1270,7 @@ def run_model(generation):
                     save_filename,
                 )
                 generation.done(save_filename)
-                generation.setStatus("Done!")
+                generation.set_status("Done!")
                 plt.plot(np.array(loss_values), "r")
 
     # @title 1.6 Define the secondary diffusion model
@@ -1462,12 +1462,12 @@ def run_model(generation):
     if args2.use256 == 0:
         sys.stdout.write("Loading 512x512_diffusion_uncond_finetune_008100 ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading 512x512_diffusion_uncond_finetune_008100 ...\n")
+        generation.set_status("Loading 512x512_diffusion_uncond_finetune_008100 ...\n")
         diffusion_model = "512x512_diffusion_uncond_finetune_008100"  # @param ["256x256_diffusion_uncond", "512x512_diffusion_uncond_finetune_008100"]
     else:
         sys.stdout.write("Loading 256x256_diffusion_uncond ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading 256x256_diffusion_uncond ...\n")
+        generation.set_status("Loading 256x256_diffusion_uncond ...\n")
         diffusion_model = "256x256_diffusion_uncond"
 
     if args2.secondarymodel == 1:
@@ -1573,56 +1573,56 @@ def run_model(generation):
     if args2.usevit32 == 1:
         sys.stdout.write("Loading ViT-B/32 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading ViT-B/32 CLIP model ...\n")
+        generation.set_status("Loading ViT-B/32 CLIP model ...\n")
         clip_models.append(
             clip.load("ViT-B/32", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usevit16 == 1:
         sys.stdout.write("Loading ViT-B/16 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading ViT-B/16 CLIP model ...\n")
+        generation.set_status("Loading ViT-B/16 CLIP model ...\n")
         clip_models.append(
             clip.load("ViT-B/16", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usevit14 == 1:
         sys.stdout.write("Loading ViT-L/14 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading ViT-L/14 CLIP model ...\n")
+        generation.set_status("Loading ViT-L/14 CLIP model ...\n")
         clip_models.append(
             clip.load("ViT-L/14", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usern50x4 == 1:
         sys.stdout.write("Loading RN50x4 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading RN50x4 CLIP model ...\n")
+        generation.set_status("Loading RN50x4 CLIP model ...\n")
         clip_models.append(
             clip.load("RN50x4", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usern50x16 == 1:
         sys.stdout.write("Loading RN50x16 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading RN50x16 CLIP model ...\n")
+        generation.set_status("Loading RN50x16 CLIP model ...\n")
         clip_models.append(
             clip.load("RN50x16", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usern50x64 == 1:
         sys.stdout.write("Loading RN50x64 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading RN50x64 CLIP model ...\n")
+        generation.set_status("Loading RN50x64 CLIP model ...\n")
         clip_models.append(
             clip.load("RN50x64", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usern50 == 1:
         sys.stdout.write("Loading RN50 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading RN50 CLIP model ...\n")
+        generation.set_status("Loading RN50 CLIP model ...\n")
         clip_models.append(
             clip.load("RN50", jit=False)[0].eval().requires_grad_(False).to(device)
         )
     if args2.usern101 == 1:
         sys.stdout.write("Loading RN101 CLIP model ...\n")
         sys.stdout.flush()
-        generation.setStatus("Loading RN101 CLIP model ...\n")
+        generation.set_status("Loading RN101 CLIP model ...\n")
         clip_models.append(
             clip.load("RN101", jit=False)[0].eval().requires_grad_(False).to(device)
         )
@@ -1663,7 +1663,7 @@ def run_model(generation):
         mean=[0.48145466, 0.4578275, 0.40821073],
         std=[0.26862954, 0.26130258, 0.27577711],
     )
-    generation.setStatus("Loading lpips model...\n")
+    generation.set_status("Loading lpips model...\n")
     lpips_model = lpips.LPIPS(net="vgg").to(device)
 
     """# 3. Settings"""
@@ -2318,9 +2318,9 @@ def run_model(generation):
     try:
         model
         diffusion = create_gaussian_diffusion(**model_config)
-        generation.setStatus(f"{DefaultPaths.model_path}/{diffusion_model} loaded")
+        generation.set_status(f"{DefaultPaths.model_path}/{diffusion_model} loaded")
     except:
-        generation.setStatus(f"Loading {DefaultPaths.model_path}/{diffusion_model}...")
+        generation.set_status(f"Loading {DefaultPaths.model_path}/{diffusion_model}...")
         model, diffusion = create_model_and_diffusion(**model_config)
         model.load_state_dict(
             torch.load(
@@ -2336,7 +2336,7 @@ def run_model(generation):
 
     sys.stdout.write("Starting ...\n")
     sys.stdout.flush()
-    generation.setStatus(f"Starting ...\n")
+    generation.set_status(f"Starting ...\n")
 
     gc.collect()
     torch.cuda.empty_cache()
