@@ -2388,9 +2388,7 @@ def generate_image():
     generation.image_file = image_path
     generations[generation.id] = generation
 
-    run_model(
-        generation=generation,
-    )        
+    run_model(generation)        
     return jsonify(generation)
 
 @app.route('/generations/<int:generation_id>')
