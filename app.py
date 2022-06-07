@@ -2352,7 +2352,7 @@ import os
 
 from flask import Flask, jsonify, request
 from subprocess import Popen
-
+import json
 
 generations = {}
 app = Flask(__name__)
@@ -2363,7 +2363,8 @@ def ping():
 
 @app.route('/generations')
 def generate_image(image, methods=['POST']):
-    body = request.json
+    modelSettings = json.loads(request.form['modelSettings'])
+    prompt = request.form['prompt']
     image_file = request.files['image']
 
     uploaded_folder = f"./uploaded"
@@ -2373,7 +2374,7 @@ def generate_image(image, methods=['POST']):
     image_path = os.path.join(uploaded_folder, image_file.filename)
     image_file.save(image_path)
 
-    generation = Generation(body.prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", body.modelSettings)
+    generation = Generation(prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
     generation.image_file = image_path
     generations[generation.id] = generation
 
