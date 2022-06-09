@@ -1,148 +1,48 @@
 #!/usr/bin/env python3
 
-# Disco Diffusion v5 [w/ 3D animation] (modified by @softology to work on Visions of Chaos, then further modified by @multimodalart to run on Multimodal, THEN modified by @andyshand to run on vast.ai with an HTTP API)
-# Adapted from the Visions of Chaos software (https://softology.pro/voc.htm), that adapted it from the
-# Original file is located at https://colab.research.google.com/github/alembics/disco-diffusion/blob/main/Disco_Diffusion.ipynb
-
-# required models
-# https://github.com/intel-isl/DPT/releases/download/1_0/dpt_large-midas-2f21e586.pt
-# https://cloudflare-ipfs.com/ipfs/Qmd2mMnDLWePKmgfS8m6ntAg4nhV5VkUyAydYBp8cWWeB7/AdaBins_nyu.pt
-# git clone https://github.com/isl-org/MiDaS.git
-# git clone https://github.com/alembics/disco-diffusion.git
-
-
-"""#Tutorial
-
-**Diffusion settings (Defaults are heavily outdated)**
----
-
-This section is outdated as of v2
-
-Setting | Description | Default
---- | --- | ---
-**Your vision:**
-`text_prompts` | A description of what you'd like the machine to generate. Think of it like writing the caption below your image on a website. | N/A
-`image_prompts` | Think of these images more as a description of their contents. | N/A
-**Image quality:**
-`clip_guidance_scale`  | Controls how much the image should look like the prompt. | 1000
-`tv_scale` |  Controls the smoothness of the final output. | 150
-`range_scale` |  Controls how far out of range RGB values are allowed to be. | 150
-`sat_scale` | Controls how much saturation is allowed. From nshepperd's JAX notebook. | 0
-`cutn` | Controls how many crops to take from the image. | 16
-`cutn_batches` | Accumulate CLIP gradient from multiple batches of cuts  | 2
-**Init settings:**
-`init_image` |   URL or local path | None
-`init_scale` |  This enhances the effect of the init image, a good value is 1000 | 0
-`skip_steps Controls the starting point along the diffusion timesteps | 0
-`perlin_init` |  Option to start with random perlin noise | False
-`perlin_mode` |  ('gray', 'color') | 'mixed'
-**Advanced:**
-`skip_augs` |Controls whether to skip torchvision augmentations | False
-`randomize_class` |Controls whether the imagenet class is randomly changed each iteration | True
-`clip_denoised` |Determines whether CLIP discriminates a noisy or denoised image | False
-`clamp_grad` |Experimental: Using adaptive clip grad in the cond_fn | True
-`seed`  | Choose a random seed and print it at end of run for reproduction | random_seed
-`fuzzy_prompt` | Controls whether to add multiple noisy prompts to the prompt losses | False
-`rand_mag` |Controls the magnitude of the random noise | 0.1
-`eta` | DDIM hyperparameter | 0.5
-
-..
-
-**Model settings**
----
-
-Setting | Description | Default
---- | --- | ---
-**Diffusion:**
-`timestep_respacing`  | Modify this value to decrease the number of timesteps. | ddim100
-`diffusion_steps` || 1000
-**Diffusion:**
-`clip_models`  | Models of CLIP to load. Typically the more, the better but they all come at a hefty VRAM cost. | ViT-B/32, ViT-B/16, RN50x4
-
-# 1. Set Up
-"""
-
-import cmd
 import sys
 from DefaultPaths import DefaultPaths
-
-sys.stdout.write("Imports ...\n")
-sys.stdout.flush()
-
+from SecondaryModel import alpha_sigma_to_t
+from api import create_api
+from fns import create_perlin_noise, get_support_fns
+from init_midas_depth_model import init_midas_depth_model
 from before_run import before_run
+from load_model import load_clip_model, load_gaussian_diffusion_model, load_gaussian_diffusion_model_2, load_secondary_model, load_torch_model
 before_run()
 
 import gc
-import hashlib
-import io
-import json
 import math
 import os
-import random
 import sys
 import time
 
-from Generation import Generation
-from dataclasses import dataclass
-from datetime import datetime
-from functools import partial
 from glob import glob
-from os import path
 from os.path import exists as path_exists
 from types import SimpleNamespace
 
-# from tqdm.notebook import tqdm
-# from stqdm_local import stqdm
 import clip
 import cv2
 import disco_xform_utils as dxf
 import lpips
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import py3d_tools as p3dT
-import requests
 import torch
-import torchvision
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
-from einops import rearrange, repeat
-# from models import SLIP_VITB16, SLIP, SLIP_VITL16
-from guided_diffusion.script_util import (create_gaussian_diffusion,
-                                          create_model_and_diffusion,
-                                          model_and_diffusion_defaults)
-from ldm.modules.diffusionmodules.util import (make_ddim_sampling_parameters,
-                                               make_ddim_timesteps, noise_like)
-# from ldm.models.diffusion.ddim import DDIMSampler
-from ldm.util import instantiate_from_config, ismap
-from midas.dpt_depth import DPTDepthModel
-from midas.midas_net import MidasNet
-from midas.midas_net_custom import MidasNet_small
-from midas.transforms import NormalizeImage, PrepareForNet, Resize
-from numpy import asarray
-from omegaconf import OmegaConf
-from PIL import Image, ImageOps
+from guided_diffusion.script_util import (model_and_diffusion_defaults)
+from PIL import Image
 from resize_right import resize
 from torch import nn
 from torch.nn import functional as F
-# from taming.models import vqgan # checking correct import from taming
-from torchvision.datasets.utils import download_url
 
-sys.stdout.write("Parsing arguments ...\n")
-sys.stdout.flush()
-
-torch.cuda.empty_cache()
+# torch.cuda.empty_cache()
 def run_model(generation):
     preview_image_path = f"{DefaultPaths.output_path}/preview_output.png"
-    print(generation)
-    print(generation.args)
     args2 = generation.args
-    print('here is the seed')
-    print(args2.seed)
+    
     global model, diffusion
     if args2.seed is not None:
-        sys.stdout.write(f"Setting seed to {args2.seed} ...\n")
-        sys.stdout.flush()
         generation.set_status(f"Setting seed to {args2.seed} ...\n")
         import numpy as np
 
@@ -159,13 +59,11 @@ def run_model(generation):
         torch.backends.cudnn.benchmark = False
 
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print("Using device:", DEVICE)
+    generation.set_status("Using device:", DEVICE)
     device = DEVICE  # At least one of the modules expects this name..
 
     # If running locally, there's a good chance your env will need this in order to not crash upon np.matmul() or similar operations.
     os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-    PROJECT_DIR = os.path.abspath(os.getcwd())
 
     # AdaBins stuff
     USE_ADABINS = True
@@ -175,255 +73,10 @@ def run_model(generation):
 
         MAX_ADABINS_AREA = 500000
 
-    model_256_downloaded = False
-    model_512_downloaded = False
-    model_secondary_downloaded = False
-
-    # Initialize MiDaS depth model.
-    # It remains resident in VRAM and likely takes around 2GB VRAM.
-    # You could instead initialize it for each frame (and free it after each frame) to save VRAM.. but initializing it is slow.
-    default_models = {
-        "midas_v21_small": f"{DefaultPaths.model_path}/midas_v21_small-70d6b9c8.pt",
-        "midas_v21": f"{DefaultPaths.model_path}/midas_v21-f6b98070.pt",
-        "dpt_large": f"{DefaultPaths.model_path}/dpt_large-midas-2f21e586.pt",
-        "dpt_hybrid": f"{DefaultPaths.model_path}/dpt_hybrid-midas-501f0c75.pt",
-        "dpt_hybrid_nyu": f"{DefaultPaths.model_path}/dpt_hybrid_nyu-2ce69ec7.pt",
-    }
-
-    def init_midas_depth_model(midas_model_type="dpt_large", optimize=True):
-        midas_model = None
-        net_w = None
-        net_h = None
-        resize_mode = None
-        normalization = None
-
-        print(f"Initializing MiDaS '{midas_model_type}' depth model...")
-        # load network
-        midas_model_path = default_models[midas_model_type]
-
-        if midas_model_type == "dpt_large":  # DPT-Large
-            midas_model = DPTDepthModel(
-                path=midas_model_path,
-                backbone="vitl16_384",
-                non_negative=True,
-            )
-            net_w, net_h = 384, 384
-            resize_mode = "minimal"
-            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-        elif midas_model_type == "dpt_hybrid":  # DPT-Hybrid
-            midas_model = DPTDepthModel(
-                path=midas_model_path,
-                backbone="vitb_rn50_384",
-                non_negative=True,
-            )
-            net_w, net_h = 384, 384
-            resize_mode = "minimal"
-            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-        elif midas_model_type == "dpt_hybrid_nyu":  # DPT-Hybrid-NYU
-            midas_model = DPTDepthModel(
-                path=midas_model_path,
-                backbone="vitb_rn50_384",
-                non_negative=True,
-            )
-            net_w, net_h = 384, 384
-            resize_mode = "minimal"
-            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-        elif midas_model_type == "midas_v21":
-            midas_model = MidasNet(midas_model_path, non_negative=True)
-            net_w, net_h = 384, 384
-            resize_mode = "upper_bound"
-            normalization = NormalizeImage(
-                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-            )
-        elif midas_model_type == "midas_v21_small":
-            midas_model = MidasNet_small(
-                midas_model_path,
-                features=64,
-                backbone="efficientnet_lite3",
-                exportable=True,
-                non_negative=True,
-                blocks={"expand": True},
-            )
-            net_w, net_h = 256, 256
-            resize_mode = "upper_bound"
-            normalization = NormalizeImage(
-                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-            )
-        else:
-            print(f"midas_model_type '{midas_model_type}' not implemented")
-            assert False
-
-        midas_transform = T.Compose(
-            [
-                Resize(
-                    net_w,
-                    net_h,
-                    resize_target=None,
-                    keep_aspect_ratio=True,
-                    ensure_multiple_of=32,
-                    resize_method=resize_mode,
-                    image_interpolation_method=cv2.INTER_CUBIC,
-                ),
-                normalization,
-                PrepareForNet(),
-            ]
-        )
-
-        midas_model.eval()
-
-        if optimize == True:
-            if DEVICE == torch.device("cuda"):
-                midas_model = midas_model.to(memory_format=torch.channels_last)
-                midas_model = midas_model.half()
-
-        midas_model.to(DEVICE)
-
-        print(f"MiDaS '{midas_model_type}' depth model initialized.")
-        return midas_model, midas_transform, net_w, net_h, resize_mode, normalization
-
-    # @title 1.5 Define necessary functions
-
-    # https://gist.github.com/adefossez/0646dbe9ed4005480a2407c62aac8869
-
-    def interp(t):
-        return 3 * t**2 - 2 * t**3
-
-    def perlin(width, height, scale=10, device=None):
-        gx, gy = torch.randn(2, width + 1, height + 1, 1, 1, device=device)
-        xs = torch.linspace(0, 1, scale + 1)[:-1, None].to(device)
-        ys = torch.linspace(0, 1, scale + 1)[None, :-1].to(device)
-        wx = 1 - interp(xs)
-        wy = 1 - interp(ys)
-        dots = 0
-        dots += wx * wy * (gx[:-1, :-1] * xs + gy[:-1, :-1] * ys)
-        dots += (1 - wx) * wy * (-gx[1:, :-1] * (1 - xs) + gy[1:, :-1] * ys)
-        dots += wx * (1 - wy) * (gx[:-1, 1:] * xs - gy[:-1, 1:] * (1 - ys))
-        dots += (1 - wx) * (1 - wy) * (-gx[1:, 1:] * (1 - xs) - gy[1:, 1:] * (1 - ys))
-        return dots.permute(0, 2, 1, 3).contiguous().view(width * scale, height * scale)
-
-    def perlin_ms(octaves, width, height, grayscale, device=device):
-        out_array = [0.5] if grayscale else [0.5, 0.5, 0.5]
-        # out_array = [0.0] if grayscale else [0.0, 0.0, 0.0]
-        for i in range(1 if grayscale else 3):
-            scale = 2 ** len(octaves)
-            oct_width = width
-            oct_height = height
-            for oct in octaves:
-                p = perlin(oct_width, oct_height, scale, device)
-                out_array[i] += p * oct
-                scale //= 2
-                oct_width *= 2
-                oct_height *= 2
-        return torch.cat(out_array)
-
-    def create_perlin_noise(octaves=[1, 1, 1, 1], width=2, height=2, grayscale=True):
-        out = perlin_ms(octaves, width, height, grayscale)
-        if grayscale:
-            out = TF.resize(size=(side_y, side_x), img=out.unsqueeze(0))
-            out = TF.to_pil_image(out.clamp(0, 1)).convert("RGB")
-        else:
-            out = out.reshape(-1, 3, out.shape[0] // 3, out.shape[1])
-            out = TF.resize(size=(side_y, side_x), img=out)
-            out = TF.to_pil_image(out.clamp(0, 1).squeeze())
-
-        out = ImageOps.autocontrast(out)
-        return out
-
-    def regen_perlin():
-        if perlin_mode == "color":
-            init = create_perlin_noise(
-                [1.5**-i * 0.5 for i in range(12)], 1, 1, False
-            )
-            init2 = create_perlin_noise(
-                [1.5**-i * 0.5 for i in range(8)], 4, 4, False
-            )
-        elif perlin_mode == "gray":
-            init = create_perlin_noise([1.5**-i * 0.5 for i in range(12)], 1, 1, True)
-            init2 = create_perlin_noise([1.5**-i * 0.5 for i in range(8)], 4, 4, True)
-        else:
-            init = create_perlin_noise(
-                [1.5**-i * 0.5 for i in range(12)], 1, 1, False
-            )
-            init2 = create_perlin_noise([1.5**-i * 0.5 for i in range(8)], 4, 4, True)
-
-        init = (
-            TF.to_tensor(init)
-            .add(TF.to_tensor(init2))
-            .div(2)
-            .to(device)
-            .unsqueeze(0)
-            .mul(2)
-            .sub(1)
-        )
-        del init2
-        return init.expand(batch_size, -1, -1, -1)
-
-    def fetch(url_or_path):
-        if str(url_or_path).startswith("http://") or str(url_or_path).startswith(
-            "https://"
-        ):
-            r = requests.get(url_or_path)
-            r.raise_for_status()
-            fd = io.BytesIO()
-            fd.write(r.content)
-            fd.seek(0)
-            return fd
-        return open(url_or_path, "rb")
-
-    def read_image_workaround(path):
-        """OpenCV reads images as BGR, Pillow saves them as RGB. Work around
-        this incompatibility to avoid colour inversions."""
-        im_tmp = cv2.imread(path)
-        return cv2.cvtColor(im_tmp, cv2.COLOR_BGR2RGB)
-
-    def parse_prompt(prompt):
-        if prompt.startswith("http://") or prompt.startswith("https://"):
-            vals = prompt.rsplit(":", 2)
-            vals = [vals[0] + ":" + vals[1], *vals[2:]]
-        else:
-            vals = prompt.rsplit(":", 1)
-        vals = vals + ["", "1"][len(vals) :]
-        return vals[0], float(vals[1])
-
-    def sinc(x):
-        return torch.where(
-            x != 0, torch.sin(math.pi * x) / (math.pi * x), x.new_ones([])
-        )
-
-    def lanczos(x, a):
-        cond = torch.logical_and(-a < x, x < a)
-        out = torch.where(cond, sinc(x) * sinc(x / a), x.new_zeros([]))
-        return out / out.sum()
-
-    def ramp(ratio, width):
-        n = math.ceil(width / ratio + 1)
-        out = torch.empty([n])
-        cur = 0
-        for i in range(out.shape[0]):
-            out[i] = cur
-            cur += ratio
-        return torch.cat([-out[1:].flip([0]), out])[1:-1]
-
-    def resample(input, size, align_corners=True):
-        n, c, h, w = input.shape
-        dh, dw = size
-
-        input = input.reshape([n * c, 1, h, w])
-
-        if dh < h:
-            kernel_h = lanczos(ramp(dh / h, 2), 2).to(input.device, input.dtype)
-            pad_h = (kernel_h.shape[0] - 1) // 2
-            input = F.pad(input, (0, 0, pad_h, pad_h), "reflect")
-            input = F.conv2d(input, kernel_h[None, None, :, None])
-
-        if dw < w:
-            kernel_w = lanczos(ramp(dw / w, 2), 2).to(input.device, input.dtype)
-            pad_w = (kernel_w.shape[0] - 1) // 2
-            input = F.pad(input, (pad_w, pad_w, 0, 0), "reflect")
-            input = F.conv2d(input, kernel_w[None, None, None, :])
-
-        input = input.reshape([n, c, h, w])
-        return F.interpolate(input, size, mode="bicubic", align_corners=align_corners)
+    resample, ramp, lanczos, sinc, perlin_ms, perlin, fetch, read_image_workaround, parse_prompt, regen_perlin = get_support_fns(device, args2)
+    use_secondary_model = False
+    if args2.secondarymodel == 1:
+        use_secondary_model = True  # @param {type: 'boolean'}
 
     class MakeCutouts(nn.Module):
         def __init__(self, cut_size, cutn, skip_augs=False):
@@ -623,23 +276,9 @@ def run_model(generation):
 
     stop_on_next_loop = False  # Make sure GPU memory doesn't get corrupted from cancelling the run mid-way through, allow a full frame to complete
 
-    def nsToStr(d):
-        h = 3.6e12
-        m = h / 60
-        s = m / 60
-        return (
-            str(int(d / h))
-            + ":"
-            + str(int((d % h) / m))
-            + ":"
-            + str(int((d % h) % m / s))
-            + "."
-            + str(int((d % h) % m % s))
-        )
-
     def do_run():
         seed = args.seed
-        # print(range(args.start_frame, args.max_frames))
+        # generation.set_status(range(args.start_frame, args.max_frames))
 
         if (args.animation_mode == "3D") and (args.midas_weight > 0.0):
             (
@@ -649,7 +288,7 @@ def run_model(generation):
                 midas_net_h,
                 midas_resize_mode,
                 midas_normalization,
-            ) = init_midas_depth_model(args.midas_depth_model)
+            ) = init_midas_depth_model(device, generation, args.midas_depth_model)
         for frame_num in range(args.start_frame, args.max_frames):
             if stop_on_next_loop:
                 break
@@ -678,7 +317,7 @@ def run_model(generation):
                     zoom = args.zoom_series[frame_num]
                     translation_x = args.translation_x_series[frame_num]
                     translation_y = args.translation_y_series[frame_num]
-                    print(
+                    generation.set_status(
                         f"angle: {angle}",
                         f"zoom: {zoom}",
                         f"translation_x: {translation_x}",
@@ -724,7 +363,7 @@ def run_model(generation):
                     rotation_3d_x = args.rotation_3d_x_series[frame_num]
                     rotation_3d_y = args.rotation_3d_y_series[frame_num]
                     rotation_3d_z = args.rotation_3d_z_series[frame_num]
-                    print(
+                    generation.set_status(
                         f"angle: {angle}",
                         # f'zoom: {zoom}',
                         f"translation_x: {translation_x}",
@@ -734,10 +373,6 @@ def run_model(generation):
                         f"rotation_3d_y: {rotation_3d_y}",
                         f"rotation_3d_z: {rotation_3d_z}",
                     )
-
-                sys.stdout.flush()
-                # sys.stdout.write(f'FRAME_NUM = {frame_num} ...\n')
-                sys.stdout.flush()
 
                 if frame_num > 0:
                     seed = seed + 1
@@ -753,12 +388,12 @@ def run_model(generation):
                         math.radians(rotation_3d_y),
                         math.radians(rotation_3d_z),
                     ]
-                    print("translation:", translate_xyz)
-                    print("rotation:", rotate_xyz)
+                    generation.set_status("translation:", translate_xyz)
+                    generation.set_status("rotation:", rotate_xyz)
                     rot_mat = p3dT.euler_angles_to_matrix(
                         torch.tensor(rotate_xyz, device=device), "XYZ"
                     ).unsqueeze(0)
-                    print("rot_mat: " + str(rot_mat))
+                    generation.set_status("rot_mat: " + str(rot_mat))
                     next_step_pil = dxf.transform_image_3d(
                         img_filepath,
                         midas_model,
@@ -779,7 +414,7 @@ def run_model(generation):
               ### Turbo mode - skip some diffusions to save time          
               if turbo_mode == True and frame_num > 10 and frame_num % int(turbo_steps) != 0:
                 #turbo_steps
-                print('turbo mode is on this frame: skipping clip diffusion steps')
+                generation.set_status('turbo mode is on this frame: skipping clip diffusion steps')
                 #this is an even frame. copy warped prior frame w/ war 
                 #filename = f'{args.batch_name}({args.batchNum})_{frame_num:04}.png'
                 #next_step_pil.save(f'{batchFolder}/{filename}') #save it as this frame
@@ -789,7 +424,7 @@ def run_model(generation):
                 next_step_pil.save(f'{img_filepath}') # save it also as prev_frame for next iteration
                 continue
               elif turbo_mode == True:
-                print('turbo mode is OFF this frame')
+                generation.set_status('turbo mode is OFF this frame')
               #else: no turbo
               """
 
@@ -823,7 +458,7 @@ def run_model(generation):
             else:
                 frame_prompt = []
 
-            print(args.image_prompts_series)
+            generation.set_status(args.image_prompts_series)
             if args.image_prompts_series is not None and frame_num >= len(
                 args.image_prompts_series
             ):
@@ -833,7 +468,7 @@ def run_model(generation):
             else:
                 image_prompt = []
 
-            print(f"Frame Prompt: {frame_prompt}")
+            generation.set_status(f"Frame Prompt: {frame_prompt}")
 
             model_stats = []
             for clip_model in clip_models:
@@ -1037,7 +672,7 @@ def run_model(generation):
                     if torch.isnan(x_in_grad).any() == False:
                         grad = -torch.autograd.grad(x_in, x, x_in_grad)[0]
                     else:
-                        # print("NaN'd")
+                        # generation.set_status("NaN'd")
                         x_is_NaN = True
                         grad = torch.zeros_like(x)
                 if args.clamp_grad and x_is_NaN == False:
@@ -1065,7 +700,7 @@ def run_model(generation):
                   batchBar = tqdm(range(args.n_batches), desc ="Batches")
                   batchBar.n = i
                   batchBar.refresh()
-                print('')
+                generation.set_status('')
                 display.display(image_display)
                 gc.collect()
                 torch.cuda.empty_cache()
@@ -1133,8 +768,7 @@ def run_model(generation):
                     j = 0
                     before_start_time = time.perf_counter()
                     for sample in total_iterables:
-                        sys.stdout.write(f"Iteration {itt}\n")
-                        sys.stdout.flush()
+                        generation.set_status(f"Iteration {itt}\n")
                         cur_t -= 1
                         intermediateStep = False
                         if args.steps_per_checkpoint is not None:
@@ -1145,10 +779,7 @@ def run_model(generation):
                             
                         if itt % display_rate == 0 or cur_t == -1 or itt == 1:
                             for k, image in enumerate(sample["pred_xstart"]):
-                                sys.stdout.flush()
-                                sys.stdout.write("Saving progress ...\n")
-                                sys.stdout.flush()
-
+                                generation.set_status("Saving progress ...\n")
                                 image = TF.to_pil_image(
                                     image.add(1).div(2).clamp(0, 1)
                                 )
@@ -1190,9 +821,7 @@ def run_model(generation):
                                     and (args.animation_mode == "3D")
                                     and (itt == args2.iterations - skip_steps)
                                 ):
-                                    sys.stdout.flush()
-                                    sys.stdout.write("Saving 3D frame...\n")
-                                    sys.stdout.flush()
+                                    generation.set_status("Saving 3D frame ...\n")
                                     import os
 
                                     file_list = []
@@ -1214,10 +843,8 @@ def run_model(generation):
                                         + ".PNG"
                                     )
                                     generation.save_progress_image(image, save_name)
-
-                                sys.stdout.flush()
-                                sys.stdout.write("Progress saved\n")
-                                sys.stdout.flush()
+                                    
+                                generation.set_status("Progress saved\n")
                         itt += 1
                         j += 1
                         time_past_seconds = time.perf_counter() - before_start_time
@@ -1242,7 +869,7 @@ def run_model(generation):
                 # don't have a reference to image_display
                 # with image_display:
                 #     if args.sharpen_preset != "Off" and animation_mode == "None":
-                #         print("Starting Diffusion Sharpening...")
+                #         generation.set_status("Starting Diffusion Sharpening...")
                 #         do_superres(imgToSharpen, f"{batchFolder}/{filename}")
 
                 import os
@@ -1253,18 +880,18 @@ def run_model(generation):
                 if not path_exists(DefaultPaths.output_path):
                     os.makedirs(DefaultPaths.output_path)
                 save_filename = f"{DefaultPaths.output_path}/{sanitize_filename(args2.prompt)} [Disco Diffusion v5] {args2.seed}.png"
-                print(save_filename)
+                generation.set_status(save_filename)
                 file_list = []
                 if path_exists(save_filename):
                     for file in sorted(os.listdir(f"{DefaultPaths.output_path}/")):
                         if file.startswith(
                             f"{sanitize_filename(args2.prompt)} [Disco Diffusion v5] {args2.seed}"
                         ):
-                            print(file)
+                            generation.set_status(file)
                             file_list.append(file)
-                    print(file_list)
+                    generation.set_status(file_list)
                     last_name = file_list[-1]
-                    print(last_name)
+                    generation.set_status(last_name)
                     if last_name[-15:-10] == "batch":
                         count_value = int(last_name[-10:-4]) + 1
                         count_string = f"{count_value:05d}"
@@ -1278,208 +905,17 @@ def run_model(generation):
                 generation.done(save_filename)
                 generation.set_status("Done!")
                 plt.plot(np.array(loss_values), "r")
-
-    # @title 1.6 Define the secondary diffusion model
-    def append_dims(x, n):
-        return x[(Ellipsis, *(None,) * (n - x.ndim))]
-
-    def expand_to_planes(x, shape):
-        return append_dims(x, len(shape)).repeat([1, 1, *shape[2:]])
-
-    def alpha_sigma_to_t(alpha, sigma):
-        return torch.atan2(sigma, alpha) * 2 / math.pi
-
-    def t_to_alpha_sigma(t):
-        return torch.cos(t * math.pi / 2), torch.sin(t * math.pi / 2)
-
-    @dataclass
-    class DiffusionOutput:
-        v: torch.Tensor
-        pred: torch.Tensor
-        eps: torch.Tensor
-
-    class ConvBlock(nn.Sequential):
-        def __init__(self, c_in, c_out):
-            super().__init__(
-                nn.Conv2d(c_in, c_out, 3, padding=1),
-                nn.ReLU(inplace=True),
-            )
-
-    class SkipBlock(nn.Module):
-        def __init__(self, main, skip=None):
-            super().__init__()
-            self.main = nn.Sequential(*main)
-            self.skip = skip if skip else nn.Identity()
-
-        def forward(self, input):
-            return torch.cat([self.main(input), self.skip(input)], dim=1)
-
-    class FourierFeatures(nn.Module):
-        def __init__(self, in_features, out_features, std=1.0):
-            super().__init__()
-            assert out_features % 2 == 0
-            self.weight = nn.Parameter(
-                torch.randn([out_features // 2, in_features]) * std
-            )
-
-        def forward(self, input):
-            f = 2 * math.pi * input @ self.weight.T
-            return torch.cat([f.cos(), f.sin()], dim=-1)
-
-    class SecondaryDiffusionImageNet(nn.Module):
-        def __init__(self):
-            super().__init__()
-            c = 64  # The base channel count
-
-            self.timestep_embed = FourierFeatures(1, 16)
-
-            self.net = nn.Sequential(
-                ConvBlock(3 + 16, c),
-                ConvBlock(c, c),
-                SkipBlock(
-                    [
-                        nn.AvgPool2d(2),
-                        ConvBlock(c, c * 2),
-                        ConvBlock(c * 2, c * 2),
-                        SkipBlock(
-                            [
-                                nn.AvgPool2d(2),
-                                ConvBlock(c * 2, c * 4),
-                                ConvBlock(c * 4, c * 4),
-                                SkipBlock(
-                                    [
-                                        nn.AvgPool2d(2),
-                                        ConvBlock(c * 4, c * 8),
-                                        ConvBlock(c * 8, c * 4),
-                                        nn.Upsample(
-                                            scale_factor=2,
-                                            mode="bilinear",
-                                            align_corners=False,
-                                        ),
-                                    ]
-                                ),
-                                ConvBlock(c * 8, c * 4),
-                                ConvBlock(c * 4, c * 2),
-                                nn.Upsample(
-                                    scale_factor=2, mode="bilinear", align_corners=False
-                                ),
-                            ]
-                        ),
-                        ConvBlock(c * 4, c * 2),
-                        ConvBlock(c * 2, c),
-                        nn.Upsample(
-                            scale_factor=2, mode="bilinear", align_corners=False
-                        ),
-                    ]
-                ),
-                ConvBlock(c * 2, c),
-                nn.Conv2d(c, 3, 3, padding=1),
-            )
-
-        def forward(self, input, t):
-            timestep_embed = expand_to_planes(
-                self.timestep_embed(t[:, None]), input.shape
-            )
-            v = self.net(torch.cat([input, timestep_embed], dim=1))
-            alphas, sigmas = map(partial(append_dims, n=v.ndim), t_to_alpha_sigma(t))
-            pred = input * alphas - v * sigmas
-            eps = input * sigmas + v * alphas
-            return DiffusionOutput(v, pred, eps)
-
-    class SecondaryDiffusionImageNet2(nn.Module):
-        def __init__(self):
-            super().__init__()
-            c = 64  # The base channel count
-            cs = [c, c * 2, c * 2, c * 4, c * 4, c * 8]
-
-            self.timestep_embed = FourierFeatures(1, 16)
-            self.down = nn.AvgPool2d(2)
-            self.up = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)
-
-            self.net = nn.Sequential(
-                ConvBlock(3 + 16, cs[0]),
-                ConvBlock(cs[0], cs[0]),
-                SkipBlock(
-                    [
-                        self.down,
-                        ConvBlock(cs[0], cs[1]),
-                        ConvBlock(cs[1], cs[1]),
-                        SkipBlock(
-                            [
-                                self.down,
-                                ConvBlock(cs[1], cs[2]),
-                                ConvBlock(cs[2], cs[2]),
-                                SkipBlock(
-                                    [
-                                        self.down,
-                                        ConvBlock(cs[2], cs[3]),
-                                        ConvBlock(cs[3], cs[3]),
-                                        SkipBlock(
-                                            [
-                                                self.down,
-                                                ConvBlock(cs[3], cs[4]),
-                                                ConvBlock(cs[4], cs[4]),
-                                                SkipBlock(
-                                                    [
-                                                        self.down,
-                                                        ConvBlock(cs[4], cs[5]),
-                                                        ConvBlock(cs[5], cs[5]),
-                                                        ConvBlock(cs[5], cs[5]),
-                                                        ConvBlock(cs[5], cs[4]),
-                                                        self.up,
-                                                    ]
-                                                ),
-                                                ConvBlock(cs[4] * 2, cs[4]),
-                                                ConvBlock(cs[4], cs[3]),
-                                                self.up,
-                                            ]
-                                        ),
-                                        ConvBlock(cs[3] * 2, cs[3]),
-                                        ConvBlock(cs[3], cs[2]),
-                                        self.up,
-                                    ]
-                                ),
-                                ConvBlock(cs[2] * 2, cs[2]),
-                                ConvBlock(cs[2], cs[1]),
-                                self.up,
-                            ]
-                        ),
-                        ConvBlock(cs[1] * 2, cs[1]),
-                        ConvBlock(cs[1], cs[0]),
-                        self.up,
-                    ]
-                ),
-                ConvBlock(cs[0] * 2, cs[0]),
-                nn.Conv2d(cs[0], 3, 3, padding=1),
-            )
-
-        def forward(self, input, t):
-            timestep_embed = expand_to_planes(
-                self.timestep_embed(t[:, None]), input.shape
-            )
-            v = self.net(torch.cat([input, timestep_embed], dim=1))
-            alphas, sigmas = map(partial(append_dims, n=v.ndim), t_to_alpha_sigma(t))
-            pred = input * alphas - v * sigmas
-            eps = input * sigmas + v * alphas
-            return DiffusionOutput(v, pred, eps)
+    
 
     # 2. Diffusion and CLIP model settings"""
 
     if args2.use256 == 0:
-        sys.stdout.write("Loading 512x512_diffusion_uncond_finetune_008100 ...\n")
-        sys.stdout.flush()
         generation.set_status("Loading 512x512_diffusion_uncond_finetune_008100 ...\n")
         diffusion_model = "512x512_diffusion_uncond_finetune_008100"  # @param ["256x256_diffusion_uncond", "512x512_diffusion_uncond_finetune_008100"]
     else:
-        sys.stdout.write("Loading 256x256_diffusion_uncond ...\n")
-        sys.stdout.flush()
         generation.set_status("Loading 256x256_diffusion_uncond ...\n")
         diffusion_model = "256x256_diffusion_uncond"
 
-    if args2.secondarymodel == 1:
-        use_secondary_model = True  # @param {type: 'boolean'}
-    else:
-        use_secondary_model = False  # @param {type: 'boolean'}
 
     # timestep_respacing = '50' # param ['25','50','100','150','250','500','1000','ddim25','ddim50', 'ddim75', 'ddim100','ddim150','ddim250','ddim500','ddim1000']
     if args2.sampling_mode == "ddim" or args2.sampling_mode == "plms":
@@ -1492,33 +928,7 @@ def run_model(generation):
         )  #'ddim100' # Modify this value to decrease the number of timesteps.
 
     diffusion_steps = 1000  # param {type: 'number'}
-
     use_checkpoint = True  # @param {type: 'boolean'}
-
-    # @markdown If you're having issues with model downloads, check this to compare SHA's:
-    check_model_SHA = False  # @param{type:"boolean"}
-
-    model_256_SHA = "983e3de6f95c88c81b2ca7ebb2c217933be1973b1ff058776b970f901584613a"
-    model_512_SHA = "9c111ab89e214862b76e1fa6a1b3f1d329b1a88281885943d2cdbe357ad57648"
-    model_secondary_SHA = (
-        "983e3de6f95c88c81b2ca7ebb2c217933be1973b1ff058776b970f901584613a"
-    )
-
-    model_256_link = "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt"
-    model_512_link = "https://v-diffusion.s3.us-west-2.amazonaws.com/512x512_diffusion_uncond_finetune_008100.pt"
-    model_secondary_link = (
-        "https://v-diffusion.s3.us-west-2.amazonaws.com/secondary_model_imagenet_2.pth"
-    )
-
-    model_256_path = f"{DefaultPaths.model_path}/256x256_diffusion_uncond.pt"
-    model_512_path = (
-        f"{DefaultPaths.model_path}/512x512_diffusion_uncond_finetune_008100.pt"
-    )
-    model_secondary_path = f"{DefaultPaths.model_path}/secondary_model_imagenet_2.pth"
-
-    model_256_downloaded = True
-    model_512_downloaded = True
-    model_secondary_downloaded = True
 
     model_config = model_and_diffusion_defaults()
     if diffusion_model == "512x512_diffusion_uncond_finetune_008100":
@@ -1562,109 +972,28 @@ def run_model(generation):
             }
         )
 
-    secondary_model_ver = 2
     model_default = model_config["image_size"]
 
-    if secondary_model_ver == 2:
-        secondary_model = SecondaryDiffusionImageNet2()
-        secondary_model.load_state_dict(
-            torch.load(
-                f"{DefaultPaths.model_path}/secondary_model_imagenet_2.pth",
-                map_location="cpu",
-            )
-        )
-    secondary_model.eval().requires_grad_(False).to(device)
-
+    secondary_model = load_secondary_model(device, generation)
+    
     clip_models = []
-    if args2.usevit32 == 1:
-        sys.stdout.write("Loading ViT-B/32 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading ViT-B/32 CLIP model ...\n")
-        clip_models.append(
-            clip.load("ViT-B/32", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usevit16 == 1:
-        sys.stdout.write("Loading ViT-B/16 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading ViT-B/16 CLIP model ...\n")
-        clip_models.append(
-            clip.load("ViT-B/16", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usevit14 == 1:
-        sys.stdout.write("Loading ViT-L/14 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading ViT-L/14 CLIP model ...\n")
-        clip_models.append(
-            clip.load("ViT-L/14", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usern50x4 == 1:
-        sys.stdout.write("Loading RN50x4 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading RN50x4 CLIP model ...\n")
-        clip_models.append(
-            clip.load("RN50x4", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usern50x16 == 1:
-        sys.stdout.write("Loading RN50x16 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading RN50x16 CLIP model ...\n")
-        clip_models.append(
-            clip.load("RN50x16", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usern50x64 == 1:
-        sys.stdout.write("Loading RN50x64 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading RN50x64 CLIP model ...\n")
-        clip_models.append(
-            clip.load("RN50x64", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usern50 == 1:
-        sys.stdout.write("Loading RN50 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading RN50 CLIP model ...\n")
-        clip_models.append(
-            clip.load("RN50", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.usern101 == 1:
-        sys.stdout.write("Loading RN101 CLIP model ...\n")
-        sys.stdout.flush()
-        generation.set_status("Loading RN101 CLIP model ...\n")
-        clip_models.append(
-            clip.load("RN101", jit=False)[0].eval().requires_grad_(False).to(device)
-        )
-    if args2.useslipbase == 1:
-        sys.stdout.write("Loading SLIP Base model ...\n")
-        sys.stdout.flush()
-        SLIPB16model = SLIP_VITB16(ssl_mlp_dim=4096, ssl_emb_dim=256)
-        # next 2 lines needed so torch.load handles posix paths on Windows
-        import pathlib
-
-        pathlib.PosixPath = pathlib.WindowsPath
-        sd = torch.load("slip_base_100ep.pt")
-        real_sd = {}
-        for k, v in sd["state_dict"].items():
-            real_sd[".".join(k.split(".")[1:])] = v
-        del sd
-        SLIPB16model.load_state_dict(real_sd)
-        SLIPB16model.requires_grad_(False).eval().to(device)
-        clip_models.append(SLIPB16model)
-    if args2.usesliplarge == 1:
-        sys.stdout.write("Loading SLIP Large model ...\n")
-        sys.stdout.flush()
-        SLIPL16model = SLIP_VITL16(ssl_mlp_dim=4096, ssl_emb_dim=256)
-        # next 2 lines needed so torch.load handles posix paths on Windows
-        import pathlib
-
-        pathlib.PosixPath = pathlib.WindowsPath
-        sd = torch.load("slip_large_100ep.pt")
-        real_sd = {}
-        for k, v in sd["state_dict"].items():
-            real_sd[".".join(k.split(".")[1:])] = v
-        del sd
-        SLIPL16model.load_state_dict(real_sd)
-        SLIPL16model.requires_grad_(False).eval().to(device)
-        clip_models.append(SLIPL16model)
-
+    model_map = {
+        "ViT-B/32": "usevit32",
+        "ViT-B/16": "usevit16",
+        "ViT-L/14": "usevit14",
+        "RN50x4": "usern50x4",
+        "RN50x16": "usern50x16",
+        "RN50x64": "usern50x64",
+        "RN50": "usern50",
+        "RN101": "usern101",    
+    }
+    
+    # Load required models
+    for key in model_map:
+        flag = model_map[key]
+        if getattr(args2, flag) == 1:
+            clip_models.append(load_clip_model(key, device, generation))
+            
     normalize = T.Normalize(
         mean=[0.48145466, 0.4578275, 0.40821073],
         std=[0.26862954, 0.26130258, 0.27577711],
@@ -1673,10 +1002,7 @@ def run_model(generation):
     lpips_model = lpips.LPIPS(net="vgg").to(device)
 
     """# 3. Settings"""
-
-    # sys.stdout.write("DEBUG0 ...\n")
-    # sys.stdout.flush()
-
+    
     # @markdown ####**Basic Settings:**
     batch_name = "TimeToDisco"  # @param{type: 'string'}
     steps = (
@@ -1732,9 +1058,6 @@ def run_model(generation):
     batchFolder = f"./"
     # createPath(batchFolder)
 
-    # sys.stdout.write("DEBUG1 ...\n")
-    # sys.stdout.flush()
-
     """###Animation Settings"""
 
     # @markdown ####**Animation Mode:**
@@ -1749,35 +1072,22 @@ def run_model(generation):
     video_init_path = "training.mp4"  # "D:\\sample_cat.mp4" #@param {type: 'string'}
     extract_nth_frame = 2  # @param {type:"number"}
 
-    # sys.stdout.write("DEBUG1a ...\n")
-    # sys.stdout.flush()
-
     if animation_mode == "Video Input":
         videoFramesFolder = "./videoFrames"
         # createPath(videoFramesFolder)
-        # print(f"Exporting Video Frames (1 every {extract_nth_frame})...")
-        sys.stdout.write(f"Exporting Video Frames (1 every {extract_nth_frame})...\n")
-        sys.stdout.flush()
+        # generation.set_status(f"Exporting Video Frames (1 every {extract_nth_frame})...")
+        generation.set_status(f"Exporting Video Frames (1 every {extract_nth_frame})...\n")
 
         """
       try:
         !rm {videoFramesFolder}/*.jpg
       except:
-        print('')
+        generation.set_status('')
       """
-        # sys.stdout.write("DEBUG1a1 ...\n")
-        # sys.stdout.flush()
         vf = f'"select=not(mod(n\,{extract_nth_frame}))"'
-        # sys.stdout.write("DEBUG1a2 ...\n")
-        # sys.stdout.flush()
         os.system(
             f"ffmpeg.exe -i {video_init_path} -vf {vf} -vsync vfr -q:v 2 -loglevel error -stats {videoFramesFolder}/%04d.jpg"
         )
-        # sys.stdout.write("DEBUG1a3 ...\n")
-        # sys.stdout.flush()
-
-    # sys.stdout.write("DEBUG1b ...\n")
-    # sys.stdout.flush()
 
     # @markdown ---
 
@@ -1787,14 +1097,9 @@ def run_model(generation):
     key_frames = True  # @param {type:"boolean"}
     max_frames = args2.max_frames  # 10000#@param {type:"number"}
 
-    # sys.stdout.write("DEBUG1c ...\n")
-    # sys.stdout.flush()
-
     if animation_mode == "Video Input":
         max_frames = len(glob(f"{videoFramesFolder}/*.jpg"))
 
-    # sys.stdout.write("DEBUG1d ...\n")
-    # sys.stdout.flush()
 
     interp_spline = "Linear"  # Do not change, currently will not look good. param ['Linear','Quadratic','Cubic']{type:"string"}
     angle = args2.angle  # "0:(0)"#@param {type:"string"}
@@ -1952,7 +1257,7 @@ def run_model(generation):
         try:
             angle_series = get_inbetweens(parse_key_frames(angle))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `angle` correctly for key frames.\n"
                 "Attempting to interpret `angle` as "
@@ -1966,7 +1271,7 @@ def run_model(generation):
         try:
             zoom_series = get_inbetweens(parse_key_frames(zoom))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `zoom` correctly for key frames.\n"
                 "Attempting to interpret `zoom` as "
@@ -1980,7 +1285,7 @@ def run_model(generation):
         try:
             translation_x_series = get_inbetweens(parse_key_frames(translation_x))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `translation_x` correctly for key frames.\n"
                 "Attempting to interpret `translation_x` as "
@@ -1994,7 +1299,7 @@ def run_model(generation):
         try:
             translation_y_series = get_inbetweens(parse_key_frames(translation_y))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `translation_y` correctly for key frames.\n"
                 "Attempting to interpret `translation_y` as "
@@ -2008,7 +1313,7 @@ def run_model(generation):
         try:
             translation_z_series = get_inbetweens(parse_key_frames(translation_z))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `translation_z` correctly for key frames.\n"
                 "Attempting to interpret `translation_z` as "
@@ -2022,7 +1327,7 @@ def run_model(generation):
         try:
             rotation_3d_x_series = get_inbetweens(parse_key_frames(rotation_3d_x))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `rotation_3d_x` correctly for key frames.\n"
                 "Attempting to interpret `rotation_3d_x` as "
@@ -2036,7 +1341,7 @@ def run_model(generation):
         try:
             rotation_3d_y_series = get_inbetweens(parse_key_frames(rotation_3d_y))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `rotation_3d_y` correctly for key frames.\n"
                 "Attempting to interpret `rotation_3d_y` as "
@@ -2050,7 +1355,7 @@ def run_model(generation):
         try:
             rotation_3d_z_series = get_inbetweens(parse_key_frames(rotation_3d_z))
         except RuntimeError as e:
-            print(
+            generation.set_status(
                 "WARNING: You have selected to use key frames, but you have not "
                 "formatted `rotation_3d_z` correctly for key frames.\n"
                 "Attempting to interpret `rotation_3d_z` as "
@@ -2093,7 +1398,7 @@ def run_model(generation):
             steps_per_checkpoint = (
                 steps_per_checkpoint if steps_per_checkpoint > 0 else 1
             )
-            print(f"Will save every {steps_per_checkpoint} steps")
+            generation.set_status(f"Will save every {steps_per_checkpoint} steps")
         else:
             steps_per_checkpoint = steps + 10
     else:
@@ -2201,39 +1506,13 @@ def run_model(generation):
     if steps <= calc_frames_skip_steps:
         sys.exit("ERROR: You can't skip more steps than your total steps")
 
-    """
-    if resume_run:
-      if run_to_resume == 'latest':
-        try:
-          batchNum
-        except:
-          batchNum = len(glob(f"{batchFolder}/{batch_name}(*)_settings.txt"))-1
-      else:
-        batchNum = int(run_to_resume)
-      if resume_from_frame == 'latest':
-        start_frame = len(glob(batchFolder+f"/{batch_name}({batchNum})_*.png"))
-      else:
-        start_frame = int(resume_from_frame)+1
-        if retain_overwritten_frames is True:
-          existing_frames = len(glob(batchFolder+f"/{batch_name}({batchNum})_*.png"))
-          frames_to_save = existing_frames - start_frame
-          print(f'Moving {frames_to_save} frames to the Retained folder')
-          move_files(start_frame, existing_frames, batchFolder, retainFolder)
-    else:
-    """
     start_frame = 0
     batchNum = 1
-    """
-    batchNum = len(glob(batchFolder+"/*.txt"))
-    while path.isfile(f"{batchFolder}/{batch_name}({batchNum})_settings.txt") is True or path.isfile(f"{batchFolder}/{batch_name}-{batchNum}_settings.txt") is True:
-      batchNum += 1
-    """
-    # print(f'Starting Run: {batch_name}({batchNum}) at frame {start_frame}')
 
     if set_seed == "random_seed":
         random.seed()
         seed = random.randint(0, 2**32)
-        # print(f'Using seed: {seed}')
+        # generation.set_status(f'Using seed: {seed}')
     else:
         seed = int(set_seed)
 
@@ -2320,98 +1599,24 @@ def run_model(generation):
 
     args = SimpleNamespace(**args)
 
-    print("Prepping model...")
+    generation.set_status("Prepping model...")
     try:
-        model
-        diffusion = create_gaussian_diffusion(**model_config)
-        generation.set_status(f"{DefaultPaths.model_path}/{diffusion_model} loaded")
+        diffusion = load_gaussian_diffusion_model(model_config, generation)
     except:
-        generation.set_status(f"Loading {DefaultPaths.model_path}/{diffusion_model}...")
-        model, diffusion = create_model_and_diffusion(**model_config)
-        model.load_state_dict(
-            torch.load(
-                f"{DefaultPaths.model_path}/{diffusion_model}.pt", map_location="cpu"
-            )
-        )
-        model.requires_grad_(False).eval().to(device)
-        for name, param in model.named_parameters():
-            if "qkv" in name or "norm" in name or "proj" in name:
-                param.requires_grad_()
-        if model_config["use_fp16"]:
-            model.convert_to_fp16()
-
-    sys.stdout.write("Starting ...\n")
-    sys.stdout.flush()
+        load_gaussian_diffusion_model_2(diffusion_model, model_config, device, generation)
+    
     generation.set_status(f"Starting ...\n")
-
     gc.collect()
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     try:
         do_run()
     # except st.script_runner.StopException as e:
-    #    print("stopped here (a bit out)")
+    #    generation.set_status("stopped here (a bit out)")
     #    pass
     except KeyboardInterrupt:
         pass
     finally:
         gc.collect()
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()
 
-# HTTP API
-import os
-
-from flask import Flask, jsonify, request, send_file
-from subprocess import Popen
-import json
-from munch import DefaultMunch
-
-generations = {}
-app = Flask(__name__)
-
-@app.route('/ping')
-def ping():
-    return 'pong'
-
-@app.route('/generations', methods=['POST'])
-def generate_image():
-    modelSettings = DefaultMunch.fromDict(json.loads(request.form['modelSettings']))
-    prompt = request.form['prompt']
-    id = request.form['id']
-    image_file = request.files['image_file']
-    
-    uploaded_folder = f"./uploaded"
-    if not path_exists(uploaded_folder):
-        os.makedirs(uploaded_folder)
-
-    image_path = os.path.join(uploaded_folder, image_file.filename)
-    image_file.save(image_path)
-
-    generation = Generation(id, prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
-    generation.image_file = image_path
-    generations[generation.id] = generation
-
-    run_model(generation)     
-    return jsonify(generation.__dict__)
-
-@app.route('/generations/preview/<id>')
-def get_generation_preview_image(id):
-    generation = generations[id]
-    return send_file(generation.progress_image, mimetype='image/png')
-
-@app.route('/generations/<id>')
-def get_generation(id):
-    if id in generations:
-        return jsonify(generations[id].__dict__)
-    
-    # Return 404, generation not found
-    return jsonify({'error': 'generation not found'}), 404
-
-port=8888
-
-p = None
-print(f"Run the following command in another terminal window to access the web server from the internet:")
-print(f"ngrok http {port}")
-
-app.run(port=port)
-
-
+create_api(run_model)

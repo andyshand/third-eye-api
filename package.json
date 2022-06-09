@@ -1,0 +1,11 @@
+{
+  "name": "third-eye-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:andyshand/third-eye-api.git",
+  "author": "Andy Shand <andy@morethanyouknow.co.uk>",
+  "license": "MIT",
+  "dependencies": {
+    "@mtyk/workflow": "portal:../mtyk-workflow"
+  }
+}
