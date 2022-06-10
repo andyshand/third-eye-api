@@ -1605,7 +1605,7 @@ def run_model(generation: Generation):
     try:
         diffusion = load_gaussian_diffusion_model(model_config, generation)
     except:
-        load_gaussian_diffusion_model_2(diffusion_model, model_config, device, generation)
+        model, diffusion = load_gaussian_diffusion_model_2(diffusion_model, model_config, device, generation)
     
     generation.set_status(f"Starting ...\n")
     gc.collect()
