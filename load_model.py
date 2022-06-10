@@ -56,6 +56,7 @@ def load_secondary_model(device, generation):
         )
     )
     secondary_model.eval().requires_grad_(False).to(device)
+    return secondary_model
   return load_or_cached("Secondary model", create, generation)
   
   
