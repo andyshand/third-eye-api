@@ -61,7 +61,7 @@ def run_model(generation: Generation):
         torch.backends.cudnn.benchmark = False
 
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    generation.set_status("Using device:" + DEVICE)
+    # generation.set_status("Using device:" + DEVICE)
     device = DEVICE  # At least one of the modules expects this name..
 
     # If running locally, there's a good chance your env will need this in order to not crash upon np.matmul() or similar operations.
