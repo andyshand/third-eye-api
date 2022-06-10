@@ -789,7 +789,7 @@ def run_model(generation: Generation):
                                 if args.animation_mode != "None":
                                     generation.save_progress_image(image, "prevFrame.png")
 
-                                generation.save_progress_image(image, preview_image_path)
+                                generation.save_progress_image(image)
                                 if (args2.frame_dir is not None) and (
                                     args.animation_mode == "None"
                                 ):
