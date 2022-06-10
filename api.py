@@ -33,7 +33,7 @@ def create_api(run_model):
 
       init_image_path = os.path.join(uploaded_folder, image_upload.filename)
       image_upload.save(init_image_path)
-      modelSettings.init_image = init_image_path
+      modelSettings.seed_image = init_image_path
       print(modelSettings)
       print(prompt)
       generation = Generation(id, prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
