@@ -10,7 +10,7 @@ from SecondaryModel import alpha_sigma_to_t
 from api import create_api
 from fns import get_support_fns
 from init_midas_depth_model import init_midas_depth_model
-from load_model import load_clip_model, load_gaussian_diffusion_model, load_gaussian_diffusion_model_2, load_secondary_model, load_torch_model
+from load_model import load_clip_model, load_gaussian_diffusion_model, load_gaussian_diffusion_model_2, load_secondary_model
 # test
 import gc
 import math
