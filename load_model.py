@@ -34,7 +34,6 @@ def load_gaussian_diffusion_model(model_config, generation):
 
 # Was previous in an 'except' block, fallback for above method afaik
 def load_gaussian_diffusion_model_2(diffusion_model, model_config, device, generation):
-  global diffusion, model
   def create():
     model, diffusion = create_model_and_diffusion(**model_config)
     model.load_state_dict(load_torch_model(f"{DefaultPaths.model_path}/{diffusion_model}.pt", "cpu", generation))
@@ -46,7 +45,7 @@ def load_gaussian_diffusion_model_2(diffusion_model, model_config, device, gener
         model.convert_to_fp16()
     return model, diffusion
 
-  model, diffusion = load_or_cached("gaussian_diffusion_2", create, generation)
+  return load_or_cached("gaussian_diffusion_2", create, generation)
 
 def load_secondary_model(device, generation):
   def create():
