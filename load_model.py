@@ -59,4 +59,4 @@ def load_secondary_model(device, generation):
     return secondary_model
   return load_or_cached("Secondary model", create, generation)
   
-  
+  print('hello')
