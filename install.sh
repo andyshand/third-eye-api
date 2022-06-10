@@ -32,3 +32,5 @@ git clone --depth 1 "https://github.com/andyshand/third-eye-api.git"
 source /root/venv/bin/activate
 python3 -m pip install --upgrade pip
 cd third-eye-api
+
+./setup.py
