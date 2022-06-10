@@ -6,6 +6,8 @@
   "author": "Andy Shand <andy@morethanyouknow.co.uk>",
   "license": "MIT",
   "dependencies": {
-    "@mtyk/workflow": "portal:../mtyk-workflow"
+    "@mtyk/workflow": "portal:../mtyk-workflow",
+    "chokidar": "^3.5.3",
+    "lodash": "^4.17.21"
   }
 }

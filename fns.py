@@ -160,4 +160,4 @@ def get_support_fns(device, args):
   # for fn in [resample, ramp, lanczos, sinc, perlin_ms, perlin, fetch, read_image_workaround, parse_prompt, regen_perlin]:
     # fn_dict[fn.__name__] = fn
     
-  return resample, ramp, lanczos, sinc, perlin_ms, perlin, fetch, read_image_workaround, parse_prompt, regen_perlin
+  return create_perlin_noise, resample, ramp, lanczos, sinc, perlin_ms, perlin, fetch, read_image_workaround, parse_prompt, regen_perlin

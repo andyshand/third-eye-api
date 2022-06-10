@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
+from before_run import before_run
+before_run()
 import sys
+
 from DefaultPaths import DefaultPaths
 from SecondaryModel import alpha_sigma_to_t
 from api import create_api
-from fns import create_perlin_noise, get_support_fns
+from fns import get_support_fns
 from init_midas_depth_model import init_midas_depth_model
-from before_run import before_run
 from load_model import load_clip_model, load_gaussian_diffusion_model, load_gaussian_diffusion_model_2, load_secondary_model, load_torch_model
-before_run()
-
+# test
 import gc
 import math
 import os
@@ -73,7 +74,7 @@ def run_model(generation):
 
         MAX_ADABINS_AREA = 500000
 
-    resample, ramp, lanczos, sinc, perlin_ms, perlin, fetch, read_image_workaround, parse_prompt, regen_perlin = get_support_fns(device, args2)
+    create_perlin_noise, resample, ramp, lanczos, sinc, perlin_ms, perlin, fetch, read_image_workaround, parse_prompt, regen_perlin = get_support_fns(device, args2)
     use_secondary_model = False
     if args2.secondarymodel == 1:
         use_secondary_model = True  # @param {type: 'boolean'}
