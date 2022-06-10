@@ -43,9 +43,8 @@ def load_gaussian_diffusion_model_2(diffusion_model, model_config, device, gener
             param.requires_grad_()
     if model_config["use_fp16"]:
         model.convert_to_fp16()
-    return create_gaussian_diffusion(**model_config)
 
-  diffusion = load_or_cached("gaussian_diffusion_2", create, generation)
+  model, diffusion = load_or_cached("gaussian_diffusion_2", create, generation)
 
 def load_secondary_model(device, generation):
   def create():
