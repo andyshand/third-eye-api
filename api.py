@@ -26,6 +26,7 @@ def create_api(run_model):
       prompt = request.form['prompt']
       id = request.form['id']
       print(modelSettings)
+      print(prompt)
       image_file = request.files['image_file']
       
       uploaded_folder = f"./uploaded"
