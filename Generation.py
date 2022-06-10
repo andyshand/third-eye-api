@@ -30,6 +30,9 @@ class Generation(object):
         self.time_so_far = time_so_far
         self.time_left = time_left
 
+    def latest_progress_image(self):
+        return self.progress_images[max(self.progress_images.keys())]
+
     def save_progress_image(self, image, path=None):
         if path == None:
             path = f'{DefaultPaths.output_path}/{self.id}/{self.percentage}.png'
