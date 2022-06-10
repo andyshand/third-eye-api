@@ -7,10 +7,9 @@ next_generation_id = 0
 
 
 class Generation(object):
-    
-    
     def __init__(self, id, prompt, model, sub_model, args):
         self.progress_images = {}
+        self.cancelled = False
         self.model = model
         self.prompt = prompt
         self.percentage = 0
