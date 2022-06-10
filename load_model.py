@@ -26,7 +26,6 @@ def load_torch_model(model, location, generation):
   return load_or_cached(model, create, generation)
 
 def load_gaussian_diffusion_model(model_config, generation):
-  global diffusion  
   def create():
     return create_gaussian_diffusion(**model_config)
   diffusion = load_or_cached("gaussian_diffusion", create, generation)
