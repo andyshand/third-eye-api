@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from Generation import Generation
+from InterruptionException import InterruptExecution
 from before_run import before_run
 before_run()
 import sys
@@ -789,7 +790,11 @@ def run_model(generation: Generation):
                                 if args.animation_mode != "None":
                                     generation.save_progress_image(image, "prevFrame.png")
 
+
                                 generation.save_progress_image(image)
+                                if generation.cancelled:
+                                    raise (InterruptExecution("Cancelled"))
+                                    
                                 if (args2.frame_dir is not None) and (
                                     args.animation_mode == "None"
                                 ):
