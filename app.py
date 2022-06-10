@@ -1622,6 +1622,8 @@ def run_model(generation: Generation):
     #    pass
     except KeyboardInterrupt:
         pass
+    except InterruptExecution:
+        pass
     finally:
         gc.collect()
         # torch.cuda.empty_cache()
