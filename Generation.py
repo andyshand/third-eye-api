@@ -1,10 +1,16 @@
 
 
+from DefaultPaths import DefaultPaths
+
+
 next_generation_id = 0
 
 
 class Generation(object):
+    
+    
     def __init__(self, id, prompt, model, sub_model, args):
+        self.progress_images = {}
         self.model = model
         self.prompt = prompt
         self.args = args
@@ -24,8 +30,12 @@ class Generation(object):
         self.time_so_far = time_so_far
         self.time_left = time_left
 
-    def save_progress_image(self, image, path):
+    def save_progress_image(self, image, path=None):
+        if path == None:
+            path = f'{DefaultPaths.output_path}/{self.id}/{self.percentage}.png'
+            
         image.save(path)
+        self.progress_images[self.percentage] = path
         self.progress_image = path
 
     
