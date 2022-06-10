@@ -44,7 +44,7 @@ def create_api(run_model):
   @app.route('/generations/preview/<id>')
   def get_generation_preview_image(id):
       generation = generations[id]
-      return send_file(generation.progress_image, mimetype='image/png')
+      return send_file(generation.latest_progress_image(), mimetype='image/png')
 
   @app.route('/generations/<id>')
   def get_generation(id):
