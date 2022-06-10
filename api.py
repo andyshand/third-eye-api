@@ -25,8 +25,6 @@ def create_api(run_model):
       modelSettings = DefaultMunch.fromDict(json.loads(request.form['modelSettings']))
       prompt = request.form['prompt']
       id = request.form['id']
-      print(modelSettings)
-      print(prompt)
       image_upload = request.files['image_file']
       
       uploaded_folder = f"./uploaded"
@@ -36,6 +34,8 @@ def create_api(run_model):
       init_image_path = os.path.join(uploaded_folder, image_upload.filename)
       image_upload.save(init_image_path)
       modelSettings.init_image = init_image_path
+      print(modelSettings)
+      print(prompt)
       generation = Generation(id, prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
       generations[generation.id] = generation
 
