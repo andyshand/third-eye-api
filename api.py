@@ -43,6 +43,12 @@ def create_api(run_model):
       run_model(generation)     
       return jsonify(generation.__dict__)
 
+  @app.route('/generations/cancel/<id>')
+  def cancel_generation(id):
+      generation = generations[id]
+      generation.cancelled = True
+      return jsonify(generation.__dict__)
+
   @app.route('/generations/preview/<id>')
   def get_generation_preview_image(id):
       generation = generations[id]
