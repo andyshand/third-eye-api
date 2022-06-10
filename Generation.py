@@ -12,6 +12,7 @@ class Generation(object):
         self.id = id
 
     def set_status(self, status):
+        print(f"{self.id}: {status}")
         self.status = status;
 
     def done(self, result_image):
