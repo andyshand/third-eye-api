@@ -54,9 +54,6 @@ def create_api(run_model):
       return jsonify({'error': 'generation not found'}), 404
 
   port=8888
-  print(f"Run the following command in another terminal window to access the web server from the internet:")
-  print(f"ngrok http {port}")
-
   app.run(port=port)
 
 

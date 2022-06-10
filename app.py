@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from Generation import Generation
 from before_run import before_run
 before_run()
 import sys
@@ -38,7 +39,7 @@ from torch import nn
 from torch.nn import functional as F
 
 # torch.cuda.empty_cache()
-def run_model(generation):
+def run_model(generation: Generation):
     preview_image_path = f"{DefaultPaths.output_path}/preview_output.png"
     args2 = generation.args
     
@@ -60,7 +61,7 @@ def run_model(generation):
         torch.backends.cudnn.benchmark = False
 
     DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    generation.set_status("Using device:", DEVICE)
+    generation.set_status("Using device:" + DEVICE)
     device = DEVICE  # At least one of the modules expects this name..
 
     # If running locally, there's a good chance your env will need this in order to not crash upon np.matmul() or similar operations.
