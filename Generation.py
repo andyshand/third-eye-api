@@ -41,7 +41,7 @@ class Generation(object):
 
     def save_progress_image(self, image, path=None):
         if path == None:
-            path = f'{DefaultPaths.output_path}/{self.id}/{self.percentage}.png'
+            path = f'{DefaultPaths.output_path}/{self.id}_{self.percentage}.png'
             
         image.save(path)
         self.progress_images[self.percentage] = path
