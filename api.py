@@ -25,6 +25,7 @@ def create_api(run_model):
       modelSettings = DefaultMunch.fromDict(json.loads(request.form['modelSettings']))
       prompt = request.form['prompt']
       id = request.form['id']
+      print(modelSettings)
       image_file = request.files['image_file']
       
       uploaded_folder = f"./uploaded"
