@@ -36,7 +36,7 @@ def load_gaussian_diffusion_model_2(diffusion_model, model_config, device, gener
   global diffusion, model
   def create():
     model, diffusion = create_model_and_diffusion(**model_config)
-    model.load_state_dict(load_torch_model(f"{DefaultPaths.model_path}/{diffusion_model}.pt", "cpu"))
+    model.load_state_dict(load_torch_model(f"{DefaultPaths.model_path}/{diffusion_model}.pt", "cpu", generation))
     model.requires_grad_(False).eval().to(device)
     for name, param in model.named_parameters():
         if "qkv" in name or "norm" in name or "proj" in name:
