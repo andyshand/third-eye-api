@@ -27,15 +27,15 @@ def create_api(run_model):
       id = request.form['id']
       print(modelSettings)
       print(prompt)
-      image_file = request.files['image_file']
+      image_upload = request.files['image_file']
       
       uploaded_folder = f"./uploaded"
       if not path_exists(uploaded_folder):
           os.makedirs(uploaded_folder)
 
-      image_path = os.path.join(uploaded_folder, image_file.filename)
-      image_file.save(image_path)
-      modelSettings.image_path = image_path
+      init_image_path = os.path.join(uploaded_folder, image_upload.filename)
+      image_upload.save(init_image_path)
+      modelSettings.init_image = init_image_path
       generation = Generation(id, prompt, "CLIP Guided Diffusion", "Disco Diffusion v5.2", modelSettings)
       generations[generation.id] = generation
 
