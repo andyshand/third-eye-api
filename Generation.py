@@ -13,6 +13,12 @@ class Generation(object):
         self.progress_images = {}
         self.model = model
         self.prompt = prompt
+        self.percentage = 0
+        self.time_so_far = 0
+        
+        # set time_left to infinity
+        self.time_left = float('inf')
+        
         self.args = args
         self.submodel = sub_model
         self.id = id
