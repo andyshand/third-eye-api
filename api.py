@@ -11,6 +11,7 @@ from munch import DefaultMunch
 
 from Generation import Generation
 
+
 def create_api(run_model):
   generations = {}
   app = Flask(__name__)
